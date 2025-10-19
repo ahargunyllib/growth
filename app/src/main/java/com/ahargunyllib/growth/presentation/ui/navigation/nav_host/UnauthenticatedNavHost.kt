@@ -15,7 +15,7 @@ import com.ahargunyllib.growth.presentation.view.unauthenticated.SplashScreen
 
 @Composable
 fun UnauthenticatedNavHost(
-    rootNavController: NavController = rememberNavController()
+    rootNavController: NavController
 ) {
     val unauthenticatedNavController = rememberNavController()
 
@@ -28,11 +28,17 @@ fun UnauthenticatedNavHost(
             startDestination = UnauthenticatedNavObj.Splash.route,
             builder = {
                 composable(UnauthenticatedNavObj.Splash.route) {
-                    SplashScreen(unauthenticatedNavController = unauthenticatedNavController, rootNavController = rootNavController)
+                    SplashScreen(
+                        unauthenticatedNavController = unauthenticatedNavController,
+                        rootNavController = rootNavController
+                    )
                 }
 
                 composable(UnauthenticatedNavObj.Login.route) {
-                    LoginScreen(unauthenticatedNavController = unauthenticatedNavController, rootNavController = rootNavController)
+                    LoginScreen(
+                        unauthenticatedNavController = unauthenticatedNavController,
+                        rootNavController = rootNavController
+                    )
                 }
 
                 composable(UnauthenticatedNavObj.Register.route) {

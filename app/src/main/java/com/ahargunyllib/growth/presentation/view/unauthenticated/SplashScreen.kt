@@ -8,17 +8,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.ahargunyllib.growth.presentation.ui.navigation.nav_host.UnauthenticatedNavHost
-import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.UnauthenticatedNavObj
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    unauthenticatedNavController: NavController = rememberNavController(),
-    rootNavController: NavController = rememberNavController(),
-){
+    unauthenticatedNavController: NavController,
+    rootNavController: NavController,
+) {
     LaunchedEffect(Unit) {
         delay(5000)
         // if user login go authenticated screen
@@ -29,7 +26,7 @@ fun SplashScreen(
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
-    ){
+    ) {
         Text(text = "Splash Screen")
     }
 }

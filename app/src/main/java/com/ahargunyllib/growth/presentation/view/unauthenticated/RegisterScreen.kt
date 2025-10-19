@@ -9,12 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.UnauthenticatedNavObj
 
 @Composable
 fun RegisterScreen(
-    unauthenticatedNavController: NavController = rememberNavController(),
+    unauthenticatedNavController: NavController,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

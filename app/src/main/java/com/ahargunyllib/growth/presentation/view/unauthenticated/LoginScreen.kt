@@ -9,14 +9,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.RootNavObj
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.UnauthenticatedNavObj
 
 @Composable
 fun LoginScreen(
-    unauthenticatedNavController: NavController = rememberNavController(),
-    rootNavController: NavController = rememberNavController(),
+    unauthenticatedNavController: NavController,
+    rootNavController: NavController,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -26,8 +25,8 @@ fun LoginScreen(
         Text(text = "Login Screen")
         Button(
             onClick = {
-                rootNavController.navigate(RootNavObj.Authenticated.route){
-                    popUpTo(0){
+                rootNavController.navigate(RootNavObj.Authenticated.route) {
+                    popUpTo(0) {
                         inclusive = true
                     }
                     launchSingleTop = true

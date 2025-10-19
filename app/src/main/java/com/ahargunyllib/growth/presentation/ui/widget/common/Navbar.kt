@@ -1,6 +1,5 @@
 package com.ahargunyllib.growth.presentation.ui.widget.common
 
-import android.graphics.drawable.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
@@ -18,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
 import com.ahargunyllib.growth.presentation.viewmodel.NavbarViewModel
 
@@ -31,7 +29,7 @@ data class NavItem(
 
 @Composable
 fun Navbar(
-    authenticatedNavController: NavController = rememberNavController(),
+    authenticatedNavController: NavController,
     navbarViewModel: NavbarViewModel = hiltViewModel()
 ) {
     val currentPage by navbarViewModel.pageState.collectAsState()

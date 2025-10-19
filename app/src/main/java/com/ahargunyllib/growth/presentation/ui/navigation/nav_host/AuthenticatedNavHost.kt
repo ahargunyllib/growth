@@ -1,7 +1,5 @@
 package com.ahargunyllib.growth.presentation.ui.navigation.nav_host
 
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -19,7 +17,7 @@ import com.ahargunyllib.growth.presentation.view.authenticated.ProfileScreen
 import com.ahargunyllib.growth.presentation.viewmodel.NavbarViewModel
 
 @Composable
-fun AuthenticatedNavHost(rootNavController: NavController = rememberNavController()) {
+fun AuthenticatedNavHost(rootNavController: NavController) {
     val authenticatedNavController = rememberNavController()
 
     val navbarViewModel = hiltViewModel<NavbarViewModel>()

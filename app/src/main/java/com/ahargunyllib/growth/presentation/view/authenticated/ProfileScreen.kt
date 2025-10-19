@@ -9,13 +9,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.RootNavObj
 
 @Composable
 fun ProfileScreen(
-    authenticatedNavController: NavController = rememberNavController(),
-    rootNavController: NavController = rememberNavController(),
+    authenticatedNavController: NavController,
+    rootNavController: NavController,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -25,8 +24,8 @@ fun ProfileScreen(
         Text(text = "Profile Screen")
         Button(
             onClick = {
-                rootNavController.navigate(RootNavObj.Unauthenticated.route){
-                    popUpTo(0){
+                rootNavController.navigate(RootNavObj.Unauthenticated.route) {
+                    popUpTo(0) {
                         inclusive = true
                     }
                     launchSingleTop = true
