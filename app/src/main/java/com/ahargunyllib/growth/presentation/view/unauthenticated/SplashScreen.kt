@@ -19,7 +19,7 @@ fun SplashScreen(
     unauthenticatedNavController: NavController = rememberNavController(),
     rootNavController: NavController = rememberNavController(),
 ){
-    LaunchedEffect(keys = emptyArray()) {
+    LaunchedEffect(Unit) {
         delay(5000)
         // if user login go authenticated screen
         // else go to login screen
