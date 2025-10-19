@@ -23,7 +23,11 @@ fun RegisterScreen(
         Text(text = "Register Screen")
         Button(
             onClick = {
-                unauthenticatedNavController.navigate(UnauthenticatedNavObj.Login.route)
+                unauthenticatedNavController.navigate(UnauthenticatedNavObj.Login.route) {
+                    popUpTo(UnauthenticatedNavObj.Register.route) {
+                        inclusive = true
+                    }
+                }
             }
         ) {
             Text(text = "Login")
