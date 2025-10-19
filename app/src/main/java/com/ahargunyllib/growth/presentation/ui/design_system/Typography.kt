@@ -8,45 +8,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.ahargunyllib.growth.R
 
-val Nunito = FontFamily(
-    Font(R.font.nunito_regular, FontWeight.Normal),
-    Font(R.font.nunito_semibold, FontWeight.SemiBold),
-    Font(R.font.nunito_bold, FontWeight.Bold)
-)
-val typography = Typography(
-    displayLarge = TextStyle(
-        fontFamily = Nunito,
-        fontWeight = FontWeight.Bold,
-        fontSize = 30.sp,
-        lineHeight = 36.sp
-    ),
-    titleLarge = TextStyle(
-        fontFamily = Nunito,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 22.sp
-    ),
-    titleMedium = TextStyle(
-        fontFamily = Nunito,
-        fontWeight = FontWeight.Medium,
-        fontSize = 18.sp
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = Nunito,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 22.sp
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = Nunito,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp
-    ),
-    labelLarge = TextStyle(
-        fontFamily = Nunito,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 14.sp
-    )
-)
+val Nunito = FontFamily()
+val typography = Typography()
 
 sealed class GrowthTypography(val textStyle: TextStyle) {
 
