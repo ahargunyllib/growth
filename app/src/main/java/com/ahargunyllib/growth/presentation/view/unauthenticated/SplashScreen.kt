@@ -18,9 +18,17 @@ fun SplashScreen(
 ) {
     LaunchedEffect(Unit) {
         delay(5000)
-        // if user login go authenticated screen
-        // else go to login screen
-        unauthenticatedNavController.navigate(UnauthenticatedNavObj.Login.route)
+        // Check authentication state (e.g., from a ViewModel or repository)
+        val isUserLoggedIn = false // TODO: Replace with actual auth check
+        if (isUserLoggedIn) {
+            rootNavController.navigate("authenticated_route") {
+                popUpTo(0) { inclusive = true }
+            }
+        } else {
+            unauthenticatedNavController.navigate(UnauthenticatedNavObj.Login.route) {
+                popUpTo(UnauthenticatedNavObj.Splash.route) { inclusive = true }
+            }
+        }
     }
 
     Box(
