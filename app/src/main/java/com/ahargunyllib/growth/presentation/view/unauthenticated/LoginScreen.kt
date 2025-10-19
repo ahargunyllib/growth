@@ -26,8 +26,12 @@ fun LoginScreen(
         Text(text = "Login Screen")
         Button(
             onClick = {
-                // TODO: Make user unable to go back to login screen
-                rootNavController.navigate(RootNavObj.Authenticated.route)
+                rootNavController.navigate(RootNavObj.Authenticated.route){
+                    popUpTo(0){
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
             }
         ) {
             Text(text = "Login")

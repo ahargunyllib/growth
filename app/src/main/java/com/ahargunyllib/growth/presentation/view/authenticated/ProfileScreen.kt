@@ -25,7 +25,12 @@ fun ProfileScreen(
         Text(text = "Profile Screen")
         Button(
             onClick = {
-                rootNavController.navigate(RootNavObj.Unauthenticated.route)
+                rootNavController.navigate(RootNavObj.Unauthenticated.route){
+                    popUpTo(0){
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
             }
         ) {
             Text(text = "Logout")
