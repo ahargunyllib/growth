@@ -11,7 +11,7 @@ import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun HomeScreen(
-    authenticatedNavController: NavController = rememberNavController(),
+    authenticatedNavController: NavController,
 ){
     Box(
         modifier = Modifier.fillMaxSize(),
