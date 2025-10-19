@@ -8,6 +8,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
+import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
+import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.RootNavObj
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.UnauthenticatedNavObj
 import kotlinx.coroutines.delay
 
@@ -21,7 +23,7 @@ fun SplashScreen(
         // Check authentication state (e.g., from a ViewModel or repository)
         val isUserLoggedIn = false // TODO: Replace with actual auth check
         if (isUserLoggedIn) {
-            rootNavController.navigate("authenticated_route") {
+            rootNavController.navigate(RootNavObj.Authenticated.route) {
                 popUpTo(0) { inclusive = true }
             }
         } else {
