@@ -26,16 +26,6 @@ import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.RootNavObj
 
-// GABUNGKAN ICON LANGSUNG DI FILE INI
-object IconsLocal {
-    val History: ImageVector = Icons.Default.History
-    val Edit: ImageVector = Icons.Default.Edit
-    val Settings: ImageVector = Icons.Default.Settings
-    val Info: ImageVector = Icons.Default.Info
-    val Logout: ImageVector = Icons.Default.Logout
-    val ArrowRight: ImageVector = Icons.Default.KeyboardArrowRight
-}
-
 @Composable
 fun ProfileScreen(
     authenticatedNavController: NavController,
@@ -96,10 +86,10 @@ fun ProfileScreen(
                         .shadow(4.dp, RoundedCornerShape(24.dp))
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        MenuItem(icon = IconsLocal.History, text = "Riwayat Setor")
-                        MenuItem(icon = IconsLocal.Edit, text = "Edit Profile")
-                        MenuItem(icon = IconsLocal.Settings, text = "Setting Account")
-                        MenuItem(icon = IconsLocal.Info, text = "About App")
+                        MenuItem(icon = Icons.Default.History, text = "Riwayat Setor")
+                        MenuItem(icon = Icons.Default.Edit, text = "Edit Profile")
+                        MenuItem(icon = Icons.Default.Settings, text = "Setting Account")
+                        MenuItem(icon = Icons.Default.Info, text = "About App")
                     }
                 }
 
@@ -133,7 +123,7 @@ fun MenuItem(icon: ImageVector, text: String) {
             modifier = Modifier.weight(1f)
         )
         Icon(
-            imageVector = IconsLocal.ArrowRight,
+            imageVector = Icons.Default.KeyboardArrowRight,
             contentDescription = null,
             tint = GrowthScheme.Primary.color,
             modifier = Modifier.size(20.dp)
@@ -163,7 +153,7 @@ fun LogoutButton(rootNavController: NavController) {
             modifier = Modifier.align(Alignment.CenterStart)
         ) {
             Icon(
-                imageVector = IconsLocal.Logout,
+                imageVector = Icons.Default.Logout,
                 contentDescription = null,
                 tint = Color.White,
                 modifier = Modifier.size(20.dp)
