@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -13,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -21,10 +24,17 @@ import androidx.navigation.NavController
 import com.ahargunyllib.growth.R
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
-import com.ahargunyllib.growth.presentation.ui.design_system.AppIcons
-import androidx.compose.ui.draw.shadow
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.RootNavObj
 
+// GABUNGKAN ICON LANGSUNG DI FILE INI
+object IconsLocal {
+    val History: ImageVector = Icons.Default.History
+    val Edit: ImageVector = Icons.Default.Edit
+    val Settings: ImageVector = Icons.Default.Settings
+    val Info: ImageVector = Icons.Default.Info
+    val Logout: ImageVector = Icons.Default.Logout
+    val ArrowRight: ImageVector = Icons.Default.KeyboardArrowRight
+}
 
 @Composable
 fun ProfileScreen(
@@ -36,7 +46,6 @@ fun ProfileScreen(
             .fillMaxSize()
             .background(GrowthScheme.Primary.color)
     ) {
-        // HEADER BAGIAN ATAS (HIJAU)
         Spacer(modifier = Modifier.height(48.dp))
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -64,7 +73,6 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(32.dp))
         }
 
-        // CARD PUTIH MENU PROFIL
         Surface(
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             color = Color.White,
@@ -79,7 +87,6 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 24.dp)
             ) {
-                // CARD PUTIH MENU ITEM
                 Surface(
                     shape = RoundedCornerShape(24.dp),
                     color = Color.White,
@@ -89,16 +96,14 @@ fun ProfileScreen(
                         .shadow(4.dp, RoundedCornerShape(24.dp))
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        MenuItem(icon = AppIcons.History, text = "Riwayat Setor")
-                        MenuItem(icon = AppIcons.Edit, text = "Edit Profile")
-                        MenuItem(icon = AppIcons.Settings, text = "Setting Account")
-                        MenuItem(icon = AppIcons.Info, text = "About App")
+                        MenuItem(icon = IconsLocal.History, text = "Riwayat Setor")
+                        MenuItem(icon = IconsLocal.Edit, text = "Edit Profile")
+                        MenuItem(icon = IconsLocal.Settings, text = "Setting Account")
+                        MenuItem(icon = IconsLocal.Info, text = "About App")
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-
-                // LOGOUT BUTTON DI LUAR CARD
                 LogoutButton(rootNavController = rootNavController)
             }
         }
@@ -128,7 +133,7 @@ fun MenuItem(icon: ImageVector, text: String) {
             modifier = Modifier.weight(1f)
         )
         Icon(
-            imageVector = AppIcons.ArrowRight,
+            imageVector = IconsLocal.ArrowRight,
             contentDescription = null,
             tint = GrowthScheme.Primary.color,
             modifier = Modifier.size(20.dp)
@@ -158,7 +163,7 @@ fun LogoutButton(rootNavController: NavController) {
             modifier = Modifier.align(Alignment.CenterStart)
         ) {
             Icon(
-                imageVector = AppIcons.Logout,
+                imageVector = IconsLocal.Logout,
                 contentDescription = null,
                 tint = Color.White,
                 modifier = Modifier.size(20.dp)
