@@ -23,6 +23,8 @@ import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
 import com.ahargunyllib.growth.presentation.ui.design_system.AppIcons
 import androidx.compose.ui.draw.shadow
+import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.RootNavObj
+
 
 @Composable
 fun ProfileScreen(
@@ -77,7 +79,7 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 24.dp)
             ) {
-                // CARD PUTIH
+                // CARD PUTIH MENU ITEM
                 Surface(
                     shape = RoundedCornerShape(24.dp),
                     color = Color.White,
@@ -96,8 +98,8 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // LOGOUT DI LUAR SURFACE
-                LogoutButton()
+                // LOGOUT BUTTON DI LUAR CARD
+                LogoutButton(rootNavController = rootNavController)
             }
         }
     }
@@ -135,13 +137,20 @@ fun MenuItem(icon: ImageVector, text: String) {
 }
 
 @Composable
-fun LogoutButton() {
+fun LogoutButton(rootNavController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(GrowthScheme.Error.color)
-            .clickable { }
+            .clickable {
+                rootNavController.navigate(RootNavObj.Unauthenticated.route) {
+                    popUpTo(0) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+            }
             .padding(vertical = 14.dp, horizontal = 20.dp)
     ) {
         Row(
@@ -162,5 +171,4 @@ fun LogoutButton() {
             )
         }
     }
-
 }
