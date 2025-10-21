@@ -23,7 +23,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -327,10 +327,10 @@ fun RegisterScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier.weight(1f),
-                            color = GrowthScheme.Disabled.color,
-                            thickness = 1.dp
+                            thickness = 1.dp,
+                            color = GrowthScheme.Disabled.color
                         )
 
                         Text(
@@ -339,10 +339,10 @@ fun RegisterScreen(
                             color = GrowthScheme.Disabled.color
                         )
 
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier.weight(1f),
-                            color = GrowthScheme.Disabled.color,
-                            thickness = 1.dp
+                            thickness = 1.dp,
+                            color = GrowthScheme.Disabled.color
                         )
                     }
 
@@ -398,8 +398,9 @@ fun RegisterScreen(
                         )
                     }
 
-            }
+                }
 
+            }
         }
     }
-}}
+}
