@@ -25,6 +25,7 @@ navigationCompose = "2.9.5"
 playServicesLocation = "21.3.0"
 playServicesMaps = "19.2.0"
 roomRuntime = "2.8.2"
+ui = "1.9.3"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -63,6 +64,7 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
