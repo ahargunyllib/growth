@@ -2,6 +2,7 @@ package com.ahargunyllib.growth.presentation.view.authenticated
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import androidx.navigation.NavController
 import com.ahargunyllib.growth.R
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
+import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
 
 @Composable
 fun HomeScreen(authenticatedNavController: NavController) {
@@ -121,7 +123,9 @@ fun HomeScreen(authenticatedNavController: NavController) {
                 }
 
                 // === Tukar poin kanan ===
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
+                    authenticatedNavController.navigate(AuthenticatedNavObj.ExchangePoint.route)
+                }) {
                     Text(
                         text = "Tukar Poin",
                         color = GrowthScheme.Primary.color,
