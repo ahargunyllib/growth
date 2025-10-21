@@ -20,7 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -248,10 +248,10 @@ fun LoginScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier.weight(1f),
-                            color = GrowthScheme.Disabled.color,
-                            thickness = 1.dp
+                            thickness = 1.dp,
+                            color = GrowthScheme.Disabled.color
                         )
 
                         Text(
@@ -260,10 +260,10 @@ fun LoginScreen(
                             color = GrowthScheme.Disabled.color
                         )
 
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier.weight(1f),
-                            color = GrowthScheme.Disabled.color,
-                            thickness = 1.dp
+                            thickness = 1.dp,
+                            color = GrowthScheme.Disabled.color
                         )
                     }
 
