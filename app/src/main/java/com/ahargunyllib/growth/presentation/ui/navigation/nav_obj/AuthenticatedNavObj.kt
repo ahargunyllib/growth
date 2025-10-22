@@ -5,4 +5,7 @@ sealed class AuthenticatedNavObj(val route: String) {
     data object MapsScreen: AuthenticatedNavObj("maps")
     data object ProfileScreen: AuthenticatedNavObj("profile")
 
+    data object ExchangePoint: AuthenticatedNavObj("exchange_point")
+
+
 }
