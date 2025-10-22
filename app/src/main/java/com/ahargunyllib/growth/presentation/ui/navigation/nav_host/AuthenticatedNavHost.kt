@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
 import com.ahargunyllib.growth.presentation.ui.widget.common.Navbar
+import com.ahargunyllib.growth.presentation.view.authenticated.ExchangePointScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.HomeScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.MapsScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.ProfileScreen
@@ -57,6 +58,15 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
                     route = AuthenticatedNavObj.ProfileScreen.route,
                     content = {
                         ProfileScreen(
+                            authenticatedNavController = authenticatedNavController,
+                            rootNavController = rootNavController,
+                        )
+                    }
+                )
+                composable(
+                    route = AuthenticatedNavObj.ExchangePoint.route,
+                    content = {
+                        ExchangePointScreen(
                             authenticatedNavController = authenticatedNavController,
                             rootNavController = rootNavController,
                         )
