@@ -30,7 +30,6 @@ import com.ahargunyllib.growth.presentation.ui.design_system.*
 @Composable
 fun MapsScreen(authenticatedNavController: NavController) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val scope = rememberCoroutineScope()
     var isSheetVisible by remember { mutableStateOf(false) }
 
     val tpsList = listOf(
@@ -62,12 +61,7 @@ fun MapsScreen(authenticatedNavController: NavController) {
                 verticalArrangement = Arrangement.Bottom
             ) {
                 ElevatedButton(
-                    onClick = {
-                        scope.launch {
-                            isSheetVisible = true
-                            sheetState.show()
-                        }
-                    },
+                    onClick = { isSheetVisible = true },
                     shape = RoundedCornerShape(30.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
                     colors = ButtonDefaults.elevatedButtonColors(
@@ -110,12 +104,7 @@ fun MapsScreen(authenticatedNavController: NavController) {
         // Modal bottom sheet
         if (isSheetVisible) {
             ModalBottomSheet(
-                onDismissRequest = {
-                    scope.launch {
-                        sheetState.hide()
-                        isSheetVisible = false
-                    }
-                },
+                onDismissRequest = { isSheetVisible = false },
                 sheetState = sheetState,
                 containerColor = GrowthScheme.White.color,
                 dragHandle = { BottomSheetDefaults.DragHandle() }
@@ -146,6 +135,7 @@ fun MapsScreen(authenticatedNavController: NavController) {
         }
     }
 }
+
 
 @Composable
 fun GridBackground(
