@@ -1,6 +1,5 @@
 package com.ahargunyllib.growth.presentation.view.authenticated
 
-import androidx.compose.animation.core.copy
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,18 +40,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.text.color
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.ahargunyllib.growth.R
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
-import kotlin.io.path.moveTo
 
 @Composable
 fun ExchangePointScreen(
     authenticatedNavController: NavController,
-    rootNavController: NavController
+    rootNavController: NavController,
+    points: Int = 0
 ) {
     val eWallets = listOf(
         PaymentMethod("Dana", "Tanpa potongan admin", R.drawable.ic_dana)
@@ -139,7 +137,7 @@ fun ExchangePointScreen(
                             color = GrowthScheme.Black.color
                         )
                         Text(
-                            text = "400",
+                            text = points.toString(),
                             style = GrowthTypography.HeadingL.textStyle.copy(fontWeight = FontWeight.Bold)
                         )
                     }
