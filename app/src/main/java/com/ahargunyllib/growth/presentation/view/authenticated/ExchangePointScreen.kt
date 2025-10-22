@@ -50,7 +50,6 @@ import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
 fun ExchangePointScreen(
     authenticatedNavController: NavController,
     rootNavController: NavController,
-    points: Int = 0
 ) {
     val eWallets = listOf(
         PaymentMethod("Dana", "Tanpa potongan admin", R.drawable.ic_dana)
@@ -137,7 +136,7 @@ fun ExchangePointScreen(
                             color = GrowthScheme.Black.color
                         )
                         Text(
-                            text = points.toString(),
+                            text = "400",
                             style = GrowthTypography.HeadingL.textStyle.copy(fontWeight = FontWeight.Bold)
                         )
                     }
