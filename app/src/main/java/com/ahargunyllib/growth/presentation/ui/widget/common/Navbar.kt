@@ -48,6 +48,12 @@ fun Navbar(
             unselectedIcon = Icons.Outlined.Map,
         ),
         NavItem(
+            navObj = AuthenticatedNavObj.AchievementScreen,
+            label = "Achievement",
+            selectedIcon = Icons.Filled.Map,
+            unselectedIcon = Icons.Outlined.Map,
+        ),
+        NavItem(
             navObj = AuthenticatedNavObj.ProfileScreen,
             label = "Profile",
             selectedIcon = Icons.Filled.Person,

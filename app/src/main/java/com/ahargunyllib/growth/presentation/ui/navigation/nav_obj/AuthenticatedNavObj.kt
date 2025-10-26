@@ -6,6 +6,5 @@ sealed class AuthenticatedNavObj(val route: String) {
     data object ProfileScreen: AuthenticatedNavObj("profile")
 
     data object ExchangePoint: AuthenticatedNavObj("exchange_point")
-
-
+    data object AchievementScreen: AuthenticatedNavObj("achievement")
 }
