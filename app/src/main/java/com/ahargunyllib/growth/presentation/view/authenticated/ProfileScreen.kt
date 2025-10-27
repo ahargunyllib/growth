@@ -1,36 +1,78 @@
 package com.ahargunyllib.growth.presentation.view.authenticated
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.ahargunyllib.growth.R
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.RootNavObj
+import com.ahargunyllib.growth.presentation.viewmodel.ProfileViewModel
+import com.ahargunyllib.growth.utils.Resource
 
 @Composable
 fun ProfileScreen(
     authenticatedNavController: NavController,
-    rootNavController: NavController
+    rootNavController: NavController,
+    viewModel: ProfileViewModel = hiltViewModel()
 ) {
+    val state by viewModel.profileState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(key1 = Unit) {
+        viewModel.getUser()
+    }
+
+    LaunchedEffect(state.resource) {
+        when (state.resource) {
+            is Resource.Error -> {
+                Toast.makeText(context, state.resource.message, Toast.LENGTH_SHORT).show()
+            }
+
+            else -> {}
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -41,22 +83,32 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.profile),
-                contentDescription = "Profile picture",
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-            )
+            if (state.resource.data?.profileUrl != null) {
+                AsyncImage(
+                    model = state.resource.data?.profileUrl,
+                    contentDescription = "Profile picture",
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = R.drawable.profile),
+                    contentDescription = "Profile picture",
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                )
+            }
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Bagas Anugrah",
+                text = state.resource.data?.name ?: "Unknown",
                 style = GrowthTypography.HeadingL.textStyle,
                 color = Color.White
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "bagas@gmail.com",
+                text = state.resource.data?.email ?: "unknown",
                 style = GrowthTypography.BodyM.textStyle,
                 color = Color.White.copy(alpha = 0.9f)
             )
@@ -94,7 +146,15 @@ fun ProfileScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                LogoutButton(rootNavController = rootNavController)
+                LogoutButton(onPress = {
+                    viewModel.logout()
+                    rootNavController.navigate(RootNavObj.Unauthenticated.route) {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                })
             }
         }
     }
@@ -132,19 +192,14 @@ fun MenuItem(icon: ImageVector, text: String) {
 }
 
 @Composable
-fun LogoutButton(rootNavController: NavController) {
+fun LogoutButton(onPress: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(GrowthScheme.Error.color)
             .clickable {
-                rootNavController.navigate(RootNavObj.Unauthenticated.route) {
-                    popUpTo(0) {
-                        inclusive = true
-                    }
-                    launchSingleTop = true
-                }
+                onPress()
             }
             .padding(vertical = 14.dp, horizontal = 20.dp)
     ) {

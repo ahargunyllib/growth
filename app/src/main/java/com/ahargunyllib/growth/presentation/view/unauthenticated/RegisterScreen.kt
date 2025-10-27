@@ -1,5 +1,6 @@
 package com.ahargunyllib.growth.presentation.view.unauthenticated
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,38 +31,50 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.ahargunyllib.growth.R
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.UnauthenticatedNavObj
+import com.ahargunyllib.growth.presentation.viewmodel.RegisterViewModel
+import com.ahargunyllib.growth.utils.Resource
 
 @Composable
 fun RegisterScreen(
     unauthenticatedNavController: NavController,
+    viewModel: RegisterViewModel = hiltViewModel(),
 ) {
-    var username by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember {mutableStateOf("")}
-    var passwordConfirmation by remember {mutableStateOf("")}
+    val state by viewModel.registerState.collectAsState()
+    val context = LocalContext.current
 
-    var passwordVisible by remember {mutableStateOf(false)}
-    var passwordVisibleConfirmation by remember {mutableStateOf(false)}
+    LaunchedEffect(state.resource) {
+        when (state.resource) {
+            is Resource.Success -> {
+                Toast.makeText(context, "Registrasi Berhasil", Toast.LENGTH_SHORT).show()
+                unauthenticatedNavController.navigate(UnauthenticatedNavObj.Login.route)
+            }
+            is Resource.Error -> {
+                Toast.makeText(context, state.resource.message, Toast.LENGTH_SHORT).show()
+            }
+            else -> {}
+        }
+    }
 
 
     Box(
@@ -120,16 +133,17 @@ fun RegisterScreen(
                     )
 
 
-            ){
-                Column (
+            ) {
+                Column(
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(36.dp)
                 ) {
-                    Column (
+                    Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()) {
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
 
                         Text(
                             "Ayo Bergabung",
@@ -140,53 +154,20 @@ fun RegisterScreen(
                             style = GrowthTypography.BodyM.textStyle,
                         )
                     }
-                    Column (
+                    Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth())
-                     {
-
-                    Text ("Username",
-                        style = GrowthTypography.LabelL.textStyle
+                        modifier = Modifier.fillMaxWidth()
                     )
+                    {
 
-                    TextField(
-                        value = username,
-                        onValueChange = { username = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                width = 1.dp,
-                                color = GrowthScheme.Disabled.color,
-                                shape = RoundedCornerShape(16.dp)
-                            ),
-                        placeholder = { Text("Masukkan username Anda", style = GrowthTypography.LabelL.textStyle, color = GrowthScheme.Disabled.color) },
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        textStyle = GrowthTypography.LabelL.textStyle,
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent,
-                            focusedContainerColor = GrowthScheme.White.color,
-                            unfocusedContainerColor = GrowthScheme.White.color
-                        )
-                    )
-
-                    }
-
-                    Column (
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()) {
-
-                        Text ("Email Address",
+                        Text(
+                            "Nama",
                             style = GrowthTypography.LabelL.textStyle
                         )
 
-
-
                         TextField(
-                            value = email,
-                            onValueChange = { email = it},
+                            value = state.name,
+                            onValueChange = { viewModel.onNameChange(it) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .border(
@@ -194,7 +175,56 @@ fun RegisterScreen(
                                     color = GrowthScheme.Disabled.color,
                                     shape = RoundedCornerShape(16.dp)
                                 ),
-                            placeholder = {Text("Email Address" , style = GrowthTypography.LabelL.textStyle , color = GrowthScheme.Disabled.color)},
+                            placeholder = {
+                                Text(
+                                    "Masukkan nama Anda",
+                                    style = GrowthTypography.LabelL.textStyle,
+                                    color = GrowthScheme.Disabled.color
+                                )
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(16.dp),
+                            textStyle = GrowthTypography.LabelL.textStyle,
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent,
+                                focusedContainerColor = GrowthScheme.White.color,
+                                unfocusedContainerColor = GrowthScheme.White.color
+                            )
+                        )
+
+                    }
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                        Text(
+                            "Alamat Email",
+                            style = GrowthTypography.LabelL.textStyle
+                        )
+
+
+
+                        TextField(
+                            value = state.email,
+                            onValueChange = { viewModel.onEmailChange(it) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(
+                                    width = 1.dp,
+                                    color = GrowthScheme.Disabled.color,
+                                    shape = RoundedCornerShape(16.dp)
+                                ),
+                            placeholder = {
+                                Text(
+                                    "Alamat Email",
+                                    style = GrowthTypography.LabelL.textStyle,
+                                    color = GrowthScheme.Disabled.color
+                                )
+                            },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
                             textStyle = GrowthTypography.LabelL.textStyle,
@@ -210,17 +240,19 @@ fun RegisterScreen(
 
 
 
-                    Column (
+                    Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()) {
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
 
-                        Text ("Password",
+                        Text(
+                            "Password",
                             style = GrowthTypography.LabelL.textStyle
                         )
 
                         TextField(
-                            value = password,
-                            onValueChange = { password = it },
+                            value = state.password,
+                            onValueChange = { viewModel.onPasswordChange(it) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .border(
@@ -228,7 +260,13 @@ fun RegisterScreen(
                                     color = GrowthScheme.Disabled.color,
                                     shape = RoundedCornerShape(16.dp)
                                 ),
-                            placeholder = { Text("Masukkan password Anda" , style = GrowthTypography.LabelL.textStyle, color = GrowthScheme.Disabled.color)  },
+                            placeholder = {
+                                Text(
+                                    "Masukkan password Anda",
+                                    style = GrowthTypography.LabelL.textStyle,
+                                    color = GrowthScheme.Disabled.color
+                                )
+                            },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
                             textStyle = GrowthTypography.LabelL.textStyle,
@@ -239,35 +277,38 @@ fun RegisterScreen(
                                 focusedContainerColor = GrowthScheme.White.color,
                                 unfocusedContainerColor = GrowthScheme.White.color
                             ),
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
 
                             trailingIcon = {
-                                val image = if (passwordVisible)
+                                val image = if (state.isPasswordVisible)
                                     Icons.Filled.Visibility
                                 else
                                     Icons.Filled.VisibilityOff
 
-                                val description = if (passwordVisible) "Sembunyikan password" else "Tampilkan password"
+                                val description =
+                                    if (state.isPasswordVisible) "Sembunyikan password" else "Tampilkan password"
 
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
                                     Icon(imageVector = image, description)
                                 }
                             }
                         )
                     }
 
-                    Column (
+                    Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()) {
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
 
-                        Text ("Password Confirmation",
+                        Text(
+                            "Konfirmasi Password",
                             style = GrowthTypography.LabelL.textStyle
                         )
 
                         TextField(
-                            value = passwordConfirmation,
-                            onValueChange = { passwordConfirmation = it },
+                            value = state.confirmPassword,
+                            onValueChange = { viewModel.onConfirmPasswordChange(it) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .border(
@@ -275,7 +316,13 @@ fun RegisterScreen(
                                     color = GrowthScheme.Disabled.color,
                                     shape = RoundedCornerShape(16.dp)
                                 ),
-                            placeholder = { Text("Konfirmasi Password" , style = GrowthTypography.LabelL.textStyle, color = GrowthScheme.Disabled.color)  },
+                            placeholder = {
+                                Text(
+                                    "Konfirmasi Password",
+                                    style = GrowthTypography.LabelL.textStyle,
+                                    color = GrowthScheme.Disabled.color
+                                )
+                            },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
                             textStyle = GrowthTypography.LabelL.textStyle,
@@ -286,18 +333,19 @@ fun RegisterScreen(
                                 focusedContainerColor = GrowthScheme.White.color,
                                 unfocusedContainerColor = GrowthScheme.White.color
                             ),
-                            visualTransformation = if (passwordVisibleConfirmation) VisualTransformation.None else PasswordVisualTransformation(),
+                            visualTransformation = if (state.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
 
                             trailingIcon = {
-                                val image = if (passwordVisibleConfirmation)
+                                val image = if (state.isConfirmPasswordVisible)
                                     Icons.Filled.Visibility
                                 else
                                     Icons.Filled.VisibilityOff
 
-                                val description = if (passwordVisibleConfirmation) "Sembunyikan password" else "Tampilkan password"
+                                val description =
+                                    if (state.isConfirmPasswordVisible) "Sembunyikan password" else "Tampilkan password"
 
-                                IconButton(onClick = { passwordVisibleConfirmation = !passwordVisibleConfirmation }) {
+                                IconButton(onClick = { viewModel.toggleConfirmPasswordVisibility() }) {
                                     Icon(imageVector = image, description)
                                 }
                             }
@@ -308,7 +356,7 @@ fun RegisterScreen(
 
                     Button(
                         onClick = {
-                            unauthenticatedNavController.navigate(UnauthenticatedNavObj.Login.route)
+                            viewModel.signUpWithEmailAndPassword()
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -347,7 +395,8 @@ fun RegisterScreen(
                     }
 
                     Button(
-                        onClick = { //TODO Masuk Dengan Google
+                        onClick = {
+                            viewModel.signUpWithGoogle()
                         },
                         modifier = Modifier
                             .fillMaxWidth()

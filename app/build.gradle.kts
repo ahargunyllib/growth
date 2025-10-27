@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.dagger.hilt.android)
     alias(libs.plugins.android.libraries.mapsplatform)
     alias(libs.plugins.devtools.ksp)
+    alias(libs.plugins.gms.google.services)
 }
 
 kotlin {
@@ -116,5 +117,8 @@ dependencies {
 
     implementation(libs.mlkit.barcode.scanning)
 
-
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
 }
