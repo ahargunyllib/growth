@@ -100,6 +100,8 @@ class AuthRepositoryImpl @Inject constructor(
 
             return Resource.Success(user)
         } catch (e: Exception) {
+            // Clean up orphaned auth user
+            firebaseAuth.currentUser?.delete()?.await()
             return Resource.Error(e.message ?: "Gagal mengambil sesi")
         }
     }
