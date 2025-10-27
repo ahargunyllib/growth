@@ -1,6 +1,7 @@
 package com.ahargunyllib.growth.presentation.view.unauthenticated
 
 
+import android.widget.Toast
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.TextField
@@ -26,33 +27,60 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.ahargunyllib.growth.R
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.RootNavObj
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.UnauthenticatedNavObj
+import com.ahargunyllib.growth.presentation.viewmodel.LoginViewModel
+import com.ahargunyllib.growth.presentation.viewmodel.RegisterViewModel
+import com.ahargunyllib.growth.utils.Resource
 
 
 @Composable
 fun LoginScreen(
     unauthenticatedNavController: NavController,
     rootNavController: NavController,
+    viewModel: LoginViewModel = hiltViewModel(),
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember {mutableStateOf("")}
-    var passwordVisible by remember {mutableStateOf(false)}
+    val state by viewModel.loginState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(state.resource) {
+        when (state.resource) {
+            is Resource.Success -> {
+                Toast.makeText(context, "Login Berhasil", Toast.LENGTH_SHORT).show()
+                rootNavController.navigate(RootNavObj.Authenticated.route) {
+                    popUpTo(0) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+            }
+            is Resource.Error -> {
+                Toast.makeText(context, state.resource.message, Toast.LENGTH_SHORT).show()
+            }
+            else -> {}
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -133,13 +161,13 @@ fun LoginScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()) {
 
-                        Text ("Email Address",
+                        Text ("Alamat Email",
                             style = GrowthTypography.LabelL.textStyle
                         )
                         TextField(
 
-                            value = email,
-                            onValueChange = { email = it},
+                            value = state.email,
+                            onValueChange = { viewModel.onEmailChange(it)},
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .border(
@@ -172,8 +200,8 @@ fun LoginScreen(
                         )
 
                         TextField(
-                            value = password,
-                            onValueChange = { password = it },
+                            value = state.password,
+                            onValueChange = { viewModel.onPasswordChange(it) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .border(
@@ -192,18 +220,18 @@ fun LoginScreen(
                                 focusedContainerColor = GrowthScheme.White.color,
                                 unfocusedContainerColor = GrowthScheme.White.color
                             ),
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
 
                             trailingIcon = {
-                                val image = if (passwordVisible)
+                                val image = if (state.isPasswordVisible)
                                     Icons.Filled.Visibility
                                 else
                                     Icons.Filled.VisibilityOff
 
-                                val description = if (passwordVisible) "Sembunyikan password" else "Tampilkan password"
+                                val description = if (state.isPasswordVisible) "Sembunyikan password" else "Tampilkan password"
 
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
                                     Icon(imageVector = image, description)
                                 }
                             }
@@ -224,12 +252,7 @@ fun LoginScreen(
                     }
                     Button(
                         onClick = {
-                            rootNavController.navigate(RootNavObj.Authenticated.route) {
-                                popUpTo(0) {
-                                    inclusive = true
-                                }
-                                launchSingleTop = true
-                            }
+                            viewModel.signInWithEmailAndPassword()
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -268,7 +291,8 @@ fun LoginScreen(
                     }
 
                     Button(
-                        onClick = { //TODO Masuk Dengan Google
+                        onClick = {
+                            viewModel.signInWithGoogle()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
