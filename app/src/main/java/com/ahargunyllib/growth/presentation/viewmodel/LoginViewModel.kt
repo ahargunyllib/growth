@@ -2,6 +2,7 @@ package com.ahargunyllib.growth.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ahargunyllib.growth.model.User
 import com.ahargunyllib.growth.usecase.auth.SignInWithEmailAndPasswordUsecase
 import com.ahargunyllib.growth.utils.Resource
@@ -59,6 +60,8 @@ class LoginViewModel @Inject constructor(
     }
 
     fun signInWithGoogle(){
-        TODO("Not Implemented")
+        viewModelScope.launch {
+            _loginState.update { it.copy(resource = Resource.Error("Google Sign In is not implemented yet"))  }
+        }
     }
 }
