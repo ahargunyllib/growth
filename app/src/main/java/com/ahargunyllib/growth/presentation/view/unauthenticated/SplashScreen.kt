@@ -49,7 +49,7 @@ fun SplashScreen(
                 popUpTo(0) { inclusive = true }
             }
         } else {
-            unauthenticatedNavController.navigate(UnauthenticatedNavObj.Login.route) {
+            unauthenticatedNavController.navigate(UnauthenticatedNavObj.OnBoarding.route) {
                 popUpTo(UnauthenticatedNavObj.Splash.route) { inclusive = true }
             }
         }
