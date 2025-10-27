@@ -12,7 +12,7 @@ import javax.inject.Inject
 class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firebaseFirestore: FirebaseFirestore
-): AuthRepository {
+) : AuthRepository {
     override suspend fun signInWithEmailAndPassword(
         email: String,
         password: String
@@ -24,18 +24,20 @@ class AuthRepositoryImpl @Inject constructor(
                 return Resource.Error<User>("Masuk Gagal")
             }
 
-            val userSnapshot = firebaseFirestore.collection("users").document(firebaseUser.uid).get().await()
+            val userSnapshot =
+                firebaseFirestore.collection("users").document(firebaseUser.uid).get().await()
             if (!userSnapshot.exists()) {
                 return Resource.Error<User>("Masuk Gagal")
             }
 
             val user = userSnapshot.toObject(User::class.java)
+                ?: return Resource.Error("Gagal memuat data pengguna")
 
-            Log.d("AuthRepositoryImpl", "signInWithEmailAndPassword: ${user}" )
+            Log.d("AuthRepositoryImpl", "signInWithEmailAndPassword: ${user}")
 
             return Resource.Success(user)
         } catch (e: Exception) {
-            Log.e("AuthRepositoryImpl", "signInWithEmailAndPassword: ${e.message}" )
+            Log.e("AuthRepositoryImpl", "signInWithEmailAndPassword: ${e.message}")
 
             return Resource.Error(e.message ?: "Masuk Gagal")
         }
@@ -87,12 +89,15 @@ class AuthRepositoryImpl @Inject constructor(
         val firebaseUser = firebaseAuth.currentUser ?: return Resource.Success(null)
 
         try {
-            val userSnapshot = firebaseFirestore.collection("users").document(firebaseUser.uid).get().await()
+            val userSnapshot =
+                firebaseFirestore.collection("users").document(firebaseUser.uid).get().await()
             if (!userSnapshot.exists()) {
                 return Resource.Success(null)
             }
 
             val user = userSnapshot.toObject(User::class.java)
+                ?: return Resource.Error("Gagal memuat data pengguna")
+
             return Resource.Success(user)
         } catch (e: Exception) {
             return Resource.Error(e.message ?: "Gagal mengambil sesi")
