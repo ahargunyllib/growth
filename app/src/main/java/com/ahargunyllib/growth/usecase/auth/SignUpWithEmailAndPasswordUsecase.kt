@@ -18,7 +18,7 @@ class SignUpWithEmailAndPasswordUsecase @Inject constructor(
         }
 
         if (password.length < 6) {
-            return Resource.Error("Password harus lebih dari 6 karakter")
+            return Resource.Error("Password harus minimal 6 karakter")
         }
 
         return authRepository.signUpWithEmailAndPassword(email, password, name)
