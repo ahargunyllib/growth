@@ -1,5 +1,8 @@
 package com.ahargunyllib.growth.presentation.view.unauthenticated
 
+import androidx.annotation.DrawableRes
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,10 +20,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.ahargunyllib.growth.R
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
@@ -32,8 +33,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.pager.PageSize
 
 
-private data class Copy(val title: String, val desc: String)
-
+private data class Copy(@DrawableRes val imageRes: Int, val title: String, val desc: String)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnBoardingScreen(
@@ -41,12 +41,14 @@ fun OnBoardingScreen(
 ) {
     val pages = listOf(
         Copy(
-            "Setor dengan mudah",
-            "Antar sampahmu ke mitra terdekat dan mulailah berkontribusi untuk lingkungan. Bersama, kita bisa membuat perbedaan nyata."
+            imageRes = R.drawable.onboarding_image,
+            title = "Setor dengan mudah",
+            desc = "Antar sampahmu ke mitra terdekat dan mulailah berkontribusi untuk lingkungan. Bersama, kita bisa membuat perbedaan nyata."
         ),
         Copy(
-            "Dapatkan Poin",
-            "Setiap setoran sampah yang dilakukan akan memberikan poin yang bisa ditukarkan dengan uang tunai."
+            imageRes = R.drawable.onboarding_image_2,
+            title = "Dapatkan Poin",
+            desc = "Setiap setoran sampah yang dilakukan akan memberikan poin yang bisa ditukarkan dengan uang tunai."
         )
     )
     val pagerState = rememberPagerState(pageCount = { pages.size })
@@ -93,12 +95,18 @@ fun OnBoardingScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.onboarding_image),
-                    contentDescription = "Onboarding Illustration",
-                    modifier = Modifier.size(360.dp),
-                    contentScale = ContentScale.Fit
-                )
+                Crossfade(
+                    targetState = pagerState.currentPage,
+                    animationSpec = tween(500),
+                    label = "Onboarding Image Crossfade"
+                ) { pageIndex ->
+                    Image(
+                        painter = painterResource(id = pages[pageIndex].imageRes),
+                        contentDescription = "Onboarding Illustration",
+                        modifier = Modifier.size(360.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                }
 
                 PageIndicator(
                     currentIndex = pagerState.currentPage,
@@ -201,9 +209,3 @@ private fun PageIndicator(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun OnBoardingScreenPreview() {
-    val dummyNavController = rememberNavController()
-    OnBoardingScreen(unauthenticatedNavController = dummyNavController)
-}
