@@ -114,5 +114,7 @@ dependencies {
     // Icon Extended
     implementation(libs.androidx.material.icons.extended.android)
 
+    implementation(libs.mlkit.barcode.scanning)
+
 
 }
