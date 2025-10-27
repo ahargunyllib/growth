@@ -16,6 +16,8 @@ import com.ahargunyllib.growth.presentation.view.authenticated.ExchangePointScre
 import com.ahargunyllib.growth.presentation.view.authenticated.HomeScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.MapsScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.ProfileScreen
+import com.ahargunyllib.growth.presentation.view.authenticated.ScanQRScreen
+import com.ahargunyllib.growth.presentation.view.authenticated.SuccessDepositScreen
 import com.ahargunyllib.growth.presentation.viewmodel.NavbarViewModel
 
 @Composable
@@ -73,6 +75,24 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
                         )
                     }
                 )
+                composable(
+                    route = AuthenticatedNavObj.ScanQR.route,
+                    content = {
+                        ScanQRScreen(
+                            authenticatedNavController = authenticatedNavController,
+                        )
+                    }
+                )
+
+                composable(
+                    route = AuthenticatedNavObj.SuccessDeposit.route,
+                    content = {
+                        SuccessDepositScreen(
+                            authenticatedNavController = authenticatedNavController,
+                        )
+                    }
+                )
+                
                 composable(
                     route = AuthenticatedNavObj.AchievementScreen.route,
                     content = {

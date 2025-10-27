@@ -192,7 +192,9 @@ fun HomeScreen(authenticatedNavController: NavController) {
                 .offset(y = (-10).dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            MenuBox(icon = Icons.Default.Upload, title = "Setor")
+            MenuBox(icon = Icons.Default.Upload, title = "Setor", onClick = {
+                authenticatedNavController.navigate(AuthenticatedNavObj.ScanQR.route)
+            })
             Spacer(modifier = Modifier.width(20.dp))
             MenuBox(icon = Icons.Default.Handshake, title = "Mitra")
         }
@@ -238,11 +240,12 @@ fun CoinIcon() {
 }
 
 @Composable
-fun MenuBox(icon: ImageVector, title: String) {
+fun MenuBox(icon: ImageVector, title: String, onClick: () -> Unit = {})  {
     Card(
         modifier = Modifier
             .width(130.dp)
-            .height(80.dp),
+            .height(80.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = GrowthScheme.White.color),
         elevation = CardDefaults.cardElevation(2.dp)
