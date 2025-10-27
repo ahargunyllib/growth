@@ -82,6 +82,8 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun signUpWithGoogle(){
-        TODO("Not Implemented")
+        viewModelScope.launch {
+            _registerState.update { it.copy(resource = Resource.Error("Google Sign In is not implemented yet"))  }
+        }
     }
 }
