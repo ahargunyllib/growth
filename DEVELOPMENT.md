@@ -1,11 +1,7 @@
-## Directory Structure
++## Directory Structure
 
-It should implement MVVM, but i'm too lazy to do all that so i modify a lil bit.
++This project follows a modified MVVM architecture with the following directory organization:
 
-- `./repository/` is like `./data/repository` but since it should have `./data/model` and
-`./data/source` and i'm lazy so i decided to remove `./data/model` and `./data/source`. And because of that
-now `./data` only have `./data/repository` so i decided to move it up and remove `./data`.
-- i also remove the `./domain/repository` and replace it with `./contract` because i think its more
-suitable lol
-- i also move the `./domain/usecase` and `./domain/model` cause why not lol
-- `./domain/model` will look like in database (firestore)
++ `./repository/` consolidates all data repositories. The `./data/` directory was simplified by removing `./data/model` and `./data/source` layers, so `./repository/` was moved to the root level.
++ `./domain/repository` was replaced with `./contract` to better represent the interface contracts for domain operations.
++ `./domain/usecase` and `./domain/model` are organized to reflect the Firestore database structure.
