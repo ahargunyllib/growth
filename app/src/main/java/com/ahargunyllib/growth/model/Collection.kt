@@ -13,7 +13,7 @@ data class Collection (
     val id: String = "",
     val userId: String = "",
     val partnerId: String = "",
-    val totalWeightKg: Int = 0,
+    val totalWeightKg: Float = 0F,
     val receivedPoints: Int = 0,
     val status: CollectionStatus = CollectionStatus.PENDING,
     val createdAt: String = ""
