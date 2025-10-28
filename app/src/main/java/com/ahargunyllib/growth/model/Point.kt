@@ -10,7 +10,7 @@ enum class PointPostingRefType(
     val label: String,
 ){
     DEPOSIT(value = "deposit", label = "Deposit"),
-    MISSON_COMPLETION(value = "mission_completion", label = "Mission Completion"),
+    MISSION_COMPLETION(value = "mission_completion", label = "Mission Completion"),
     WITHDRAWAL(value = "withdrawal", label = "Withdrawal")
 }
 
