@@ -6,9 +6,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
 import com.ahargunyllib.growth.presentation.ui.widget.common.Navbar
 import com.ahargunyllib.growth.presentation.view.authenticated.AchievementScreen
@@ -86,9 +88,17 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
 
                 composable(
                     route = AuthenticatedNavObj.SuccessDeposit.route,
-                    content = {
+                    arguments = listOf(
+                        navArgument("points") { type = NavType.IntType },
+                        navArgument("weight") { type = NavType.IntType }
+                    ),
+                    content = { backStackEntry ->
+                        val points = backStackEntry.arguments?.getInt("points") ?: 0
+                        val weight = backStackEntry.arguments?.getInt("weight") ?: 0
                         SuccessDepositScreen(
                             authenticatedNavController = authenticatedNavController,
+                            points = points,
+                            weight = weight
                         )
                     }
                 )
