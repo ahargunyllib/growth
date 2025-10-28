@@ -10,7 +10,6 @@ devtoolsKSP = "2.2.20-2.0.4"
 espressoCore = "3.7.0"
 firebaseBoM = "34.4.0"
 googleServices = "4.4.4"
-gson = "2.11.0"
 guava = "33.5.0-android"
 hiltAndroid = "2.57.2"
 hiltAndroidCompiler = "2.57.2"
@@ -64,7 +63,6 @@ coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose"
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBoM" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }

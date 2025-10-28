@@ -10,9 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,25 +21,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.ahargunyllib.growth.R
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
-import com.ahargunyllib.growth.presentation.viewmodel.HomeViewModel
 
 @Composable
-fun HomeScreen(
-    authenticatedNavController: NavController,
-    viewModel: HomeViewModel = hiltViewModel()
-) {
-    val homeState by viewModel.homeState.collectAsState()
-
-    // Refresh data when returning to this screen
-    LaunchedEffect(Unit) {
-        viewModel.refreshData()
-    }
+fun HomeScreen(authenticatedNavController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -77,7 +63,7 @@ fun HomeScreen(
                     style = GrowthTypography.BodyM.textStyle
                 )
                 Text(
-                    text = homeState.user?.name ?: "Pengguna",
+                    text = "Bagas Anugrah",
                     color = GrowthScheme.White.color,
                     style = GrowthTypography.HeadingM.textStyle
                 )
@@ -128,19 +114,11 @@ fun HomeScreen(
                             color = GrowthScheme.Black2.color,
                             style = GrowthTypography.BodyM.textStyle.copy(fontSize = 12.sp)
                         )
-                        if (homeState.isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = GrowthScheme.Primary.color,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(
-                                text = "${homeState.pointAccount?.balance ?: 0}",
-                                color = GrowthScheme.Black.color,
-                                style = GrowthTypography.HeadingL.textStyle
-                            )
-                        }
+                        Text(
+                            text = "400",
+                            color = GrowthScheme.Black.color,
+                            style = GrowthTypography.HeadingL.textStyle
+                        )
                     }
                 }
 

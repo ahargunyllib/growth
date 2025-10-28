@@ -29,9 +29,7 @@ import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedN
 
 @Composable
 fun SuccessDepositScreen(
-    authenticatedNavController: NavController,
-    points: Float,
-    weight: Float
+    authenticatedNavController: NavController
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -109,7 +107,7 @@ fun SuccessDepositScreen(
                             )
                         }
                     },
-                    text = points.toString()
+                    text = "5000"
                 )
 
                 InfoItem(
@@ -121,7 +119,7 @@ fun SuccessDepositScreen(
                             modifier = Modifier.size(20.dp)
                         )
                     },
-                    text = "$weight kg"
+                    text = "10 kg"
                 )
             }
 
@@ -194,9 +192,5 @@ private fun InfoItem(icon: @Composable () -> Unit, text: String) {
 @Preview(showBackground = true)
 @Composable
 fun SuccessDepositScreenPreview() {
-    SuccessDepositScreen(
-        authenticatedNavController = rememberNavController(),
-        points = 20F,
-        weight = 2F
-    )
+    SuccessDepositScreen(rememberNavController())
 }
