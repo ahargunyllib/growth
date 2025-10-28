@@ -122,5 +122,8 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
 
+    // Gson for JSON parsing
+    implementation(libs.gson)
+
     implementation(libs.guava)
 }
