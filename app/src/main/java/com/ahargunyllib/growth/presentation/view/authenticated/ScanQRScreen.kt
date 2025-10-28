@@ -41,10 +41,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
+import com.ahargunyllib.growth.presentation.viewmodel.DepositViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -52,14 +54,12 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
-import kotlin.random.Random
-
-private data class ScanResult(val points: Int, val weight: Double)
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ScanQRScreen(
-    authenticatedNavController: NavController
+    authenticatedNavController: NavController,
+    viewModel: DepositViewModel = hiltViewModel()
 ) {
     val cameraPermissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
     val launcher = rememberLauncherForActivityResult(
@@ -74,20 +74,46 @@ fun ScanQRScreen(
         }
     }
 
+    val depositState by viewModel.depositState.collectAsState()
+
     var showDialog by remember { mutableStateOf(false) }
-    var scanResult by remember { mutableStateOf<ScanResult?>(null) }
     var isScanning by remember { mutableStateOf(true) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+
+    // Handle successful deposit
+    LaunchedEffect(depositState.isSuccess) {
+        if (depositState.isSuccess && depositState.scanData != null) {
+            val route = AuthenticatedNavObj.SuccessDeposit.createRoute(
+                points = depositState.scanData!!.points,
+                weight = depositState.scanData!!.weight
+            )
+            authenticatedNavController.navigate(route) {
+                popUpTo(AuthenticatedNavObj.ScanQR.route) { inclusive = true }
+            }
+            viewModel.resetState()
+        }
+    }
+
+    // Handle errors
+    LaunchedEffect(depositState.error) {
+        if (depositState.error != null) {
+            showErrorDialog = true
+            isScanning = false
+        }
+    }
+
+    // Handle scan data ready
+    LaunchedEffect(depositState.scanData) {
+        if (depositState.scanData != null && !depositState.isLoading) {
+            showDialog = true
+        }
+    }
 
     val onQRCodeScanned: (String) -> Unit = { qrValue ->
         if (isScanning) {
             isScanning = false
             Log.i("ScanQRScreen", "QR Code Ditemukan: $qrValue")
-
-            scanResult = ScanResult(
-                points = Random.nextInt(50, 200),
-                weight = Random.nextDouble(0.5, 5.0)
-            )
-            showDialog = true
+            viewModel.decryptAndProcessQRCode(qrValue)
         }
     }
 
@@ -123,27 +149,51 @@ fun ScanQRScreen(
             onBack = { authenticatedNavController.popBackStack() }
         )
 
+        // Loading overlay
+        if (depositState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = GrowthScheme.Primary.color)
+            }
+        }
+
+        // Scan result dialog
         AnimatedVisibility(
-            visible = showDialog,
+            visible = showDialog && depositState.scanData != null,
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            scanResult?.let { result ->
+            depositState.scanData?.let { scanData ->
                 ScanResultDialog(
-                    result = result,
+                    points = scanData.points,
+                    weight = scanData.weight.toDouble(),
                     onDismiss = {
                         showDialog = false
                         isScanning = true
+                        viewModel.resetState()
                     },
                     onConfirm = {
                         showDialog = false
-                        // Navigasi ke SuccessDepositScreen
-                        authenticatedNavController.navigate(AuthenticatedNavObj.SuccessDeposit.route) {
-                            popUpTo(AuthenticatedNavObj.ScanQR.route) { inclusive = true }
-                        }
+                        viewModel.processDeposit()
                     }
                 )
             }
+        }
+
+        // Error dialog
+        if (showErrorDialog && depositState.error != null) {
+            ErrorDialog(
+                message = depositState.error!!,
+                onDismiss = {
+                    showErrorDialog = false
+                    isScanning = true
+                    viewModel.clearError()
+                }
+            )
         }
     }
 }
@@ -343,7 +393,8 @@ private fun ScannerFrame(modifier: Modifier = Modifier) {
 
 @Composable
 private fun ScanResultDialog(
-    result: ScanResult,
+    points: Int,
+    weight: Double,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
@@ -370,7 +421,7 @@ private fun ScanResultDialog(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Poin Didapat", style = GrowthTypography.BodyM.textStyle, color = GrowthScheme.Disabled.color)
                         Text(
-                            text = result.points.toString(),
+                            text = points.toString(),
                             style = GrowthTypography.HeadingL.textStyle,
                             color = GrowthScheme.Primary.color,
                             fontWeight = FontWeight.Bold
@@ -379,7 +430,7 @@ private fun ScanResultDialog(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Berat", style = GrowthTypography.BodyM.textStyle, color = GrowthScheme.Disabled.color)
                         Text(
-                            text = "${String.format("%.1f", result.weight)} kg",
+                            text = "${String.format("%.1f", weight)} kg",
                             style = GrowthTypography.HeadingL.textStyle,
                             color = GrowthScheme.Primary.color,
                             fontWeight = FontWeight.Bold
@@ -419,6 +470,47 @@ private fun ScanResultDialog(
     }
 }
 
+@Composable
+private fun ErrorDialog(
+    message: String,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Error",
+                    style = GrowthTypography.HeadingL.textStyle,
+                    color = GrowthScheme.Black.color
+                )
+
+                Text(
+                    text = message,
+                    style = GrowthTypography.BodyM.textStyle,
+                    textAlign = TextAlign.Center,
+                    color = GrowthScheme.Black.color
+                )
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(containerColor = GrowthScheme.Primary.color)
+                ) {
+                    Text("OK", color = Color.White)
+                }
+            }
+        }
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
@@ -430,7 +522,8 @@ fun ScanQRScreenPreview() {
     ) {
         ScannerOverlay(onBack = {})
         ScanResultDialog(
-            result = ScanResult(points = 120, weight = 2.5),
+            points = 120,
+            weight = 2.5,
             onDismiss = {},
             onConfirm = {}
         )
