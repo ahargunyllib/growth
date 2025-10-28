@@ -89,12 +89,12 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
                 composable(
                     route = AuthenticatedNavObj.SuccessDeposit.route,
                     arguments = listOf(
-                        navArgument("points") { type = NavType.IntType },
-                        navArgument("weight") { type = NavType.IntType }
+                        navArgument("points") { type = NavType.FloatType },
+                        navArgument("weight") { type = NavType.FloatType }
                     ),
                     content = { backStackEntry ->
-                        val points = backStackEntry.arguments?.getInt("points") ?: 0
-                        val weight = backStackEntry.arguments?.getInt("weight") ?: 0
+                        val points = backStackEntry.arguments?.getInt("points") ?: 0F
+                        val weight = backStackEntry.arguments?.getInt("weight") ?: 0F
                         SuccessDepositScreen(
                             authenticatedNavController = authenticatedNavController,
                             points = points,

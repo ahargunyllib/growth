@@ -30,8 +30,8 @@ import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedN
 @Composable
 fun SuccessDepositScreen(
     authenticatedNavController: NavController,
-    points: Int,
-    weight: Int
+    points: Float,
+    weight: Float
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -196,7 +196,7 @@ private fun InfoItem(icon: @Composable () -> Unit, text: String) {
 fun SuccessDepositScreenPreview() {
     SuccessDepositScreen(
         authenticatedNavController = rememberNavController(),
-        points = 20,
-        weight = 2
+        points = 20F,
+        weight = 2F
     )
 }
