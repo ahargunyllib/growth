@@ -11,14 +11,14 @@ class CreateCollectionUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         partnerId: String,
-        totalWeightKg: Int,
+        totalWeightKg: Float,
         receivedPoints: Int
     ): Resource<Collection> {
         if (partnerId.isBlank()) {
             return Resource.Error("Partner ID tidak boleh kosong")
         }
 
-        if (totalWeightKg <= 0) {
+        if (totalWeightKg <= 0F) {
             return Resource.Error("Berat sampah harus lebih dari 0")
         }
 

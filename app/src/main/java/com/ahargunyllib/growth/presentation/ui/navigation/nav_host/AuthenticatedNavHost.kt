@@ -93,8 +93,8 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
                         navArgument("weight") { type = NavType.FloatType }
                     ),
                     content = { backStackEntry ->
-                        val points = backStackEntry.arguments?.getInt("points") ?: 0F
-                        val weight = backStackEntry.arguments?.getInt("weight") ?: 0F
+                        val points = backStackEntry.arguments?.getFloat("points") ?: 0F
+                        val weight = backStackEntry.arguments?.getFloat("weight") ?: 0F
                         SuccessDepositScreen(
                             authenticatedNavController = authenticatedNavController,
                             points = points,
