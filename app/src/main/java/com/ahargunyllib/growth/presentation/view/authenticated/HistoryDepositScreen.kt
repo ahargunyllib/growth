@@ -27,6 +27,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
+import androidx.compose.ui.text.style.TextOverflow
 
 
 data class DepositHistory(
@@ -53,7 +54,7 @@ fun HistoryDepositScreen(
                 title = "Hasil Setoran",
                 weight = 10f,
                 points = 5000,
-                location = "TPS 3R Bara...",
+                location = "TPS 3R Baraya Runtah.",
                 status = "Setoran Selesai"
             )
         )
@@ -280,6 +281,7 @@ fun HistoryItemCard(item: DepositHistory) {
                         )
                     }
 
+                    // [FIX] Location Badge agar ukurannya memeluk konten
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
