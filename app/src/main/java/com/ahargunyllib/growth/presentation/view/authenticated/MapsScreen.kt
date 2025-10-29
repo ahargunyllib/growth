@@ -1,133 +1,249 @@
 package com.ahargunyllib.growth.presentation.view.authenticated
 
+import android.Manifest
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.ahargunyllib.growth.model.TPS
+import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
+import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
+import com.ahargunyllib.growth.presentation.ui.design_system.Theme
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.*
 import kotlinx.coroutines.launch
-import com.ahargunyllib.growth.presentation.ui.design_system.*
+import kotlinx.coroutines.tasks.await
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@SuppressLint("MissingPermission") // Ini aman karena kita mengecek izin sebelum menggunakannya
 @Composable
 fun MapsScreen(authenticatedNavController: NavController) {
+
+    val locationPermissionsState = rememberMultiplePermissionsState(
+        listOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+        )
+    )
+
+    LaunchedEffect(Unit) {
+        locationPermissionsState.launchMultiplePermissionRequest()
+    }
+
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isSheetVisible by remember { mutableStateOf(false) }
 
     val tpsList = listOf(
-        TPSData("TPS 3R Baraya Runtah", "Sukaluyu, Telukjambe Timur", "1 Km"),
-        TPSData("Bank Sampah DLHK Karawang", "Jl. Bypass Tanjungpura, Karawang Barat", "2 Km"),
-        TPSData("TPS 3R Mekar Asih", "Jl. Raya Kosambi, Karawang Barat", "3 Km"),
-        TPSData("Bank Sampah Sejahtera", "Cikampek, Karawang Timur", "4 Km"),
-        TPSData("TPS 3R Bersih Indah", "Jl. Suroto, Karawang Kota", "5 Km")
-    )
+        TPS("Tempat Pembuangan Sampah Dinoyo", "Jl. Mertojoyo, Merjosari, Kec. Lowokwaru, Kota Malang, Jawa Timur 65144", "1 Km", LatLng(-7.946083, 112.603944)),
+        TPS("TPS sumbersari kota malang", "Jl. Bendungan Sutami No.54SumbersariKec, Kec. Lowokwaru, Kota Malang, Jawa Timur 65145", "2 Km", LatLng(-7.960843, 112.613567)),
+        TPS("TPS Doro - Karngbesuki", "Jl. Raya Candi V No.757, Doro, Karangbesuki, Kec. Sukun, Kabupaten Malang, Jawa Timur 65149", "3 Km", LatLng(-7.954151, 112.595981)),
+        )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(GrowthScheme.Background.color)
-    ) {
-        // Decorative grid background
-        GridBackground()
+    val karawang = LatLng(-7.954222, 112.616611)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(karawang, 12f)
+    }
 
-        // Map markers
-        MarkerLayer()
+    // Inisialisasi variabel untuk Fused Location Provider dan Coroutine Scope
+    val context = LocalContext.current
+    val locationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val coroutineScope = rememberCoroutineScope()
 
-        // Floating buttons (show when bottom sheet hidden)
-        AnimatedVisibility(visible = !isSheetVisible) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 60.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Bottom
-            ) {
-                ElevatedButton(
-                    onClick = { isSheetVisible = true },
-                    shape = RoundedCornerShape(30.dp),
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
-                    colors = ButtonDefaults.elevatedButtonColors(
-                        containerColor = GrowthScheme.White.color,
-                        contentColor = GrowthScheme.Primary.color
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Peta Mitra",
+                        style = GrowthTypography.HeadingM.textStyle.copy(fontWeight = FontWeight.Bold),
+                        color = GrowthScheme.Primary.color
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { authenticatedNavController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = GrowthScheme.Primary.color
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(GrowthScheme.Background.color)
+        ) {
+            if (locationPermissionsState.allPermissionsGranted) {
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    properties = MapProperties(isMyLocationEnabled = true),
+                    uiSettings = MapUiSettings(
+                        myLocationButtonEnabled = false,
+                        zoomControlsEnabled = false,
+                        zoomGesturesEnabled = true
                     )
                 ) {
-                    Icon(Icons.Default.List, contentDescription = "List")
-                    Spacer(modifier = Modifier.width(8.dp))
+                    tpsList.forEach { tps ->
+                        Marker(
+                            state = MarkerState(position = tps.location),
+                            title = tps.name,
+                            snippet = tps.address
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text("Izin Lokasi Diperlukan", style = MaterialTheme.typography.titleLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Show list",
-                        style = GrowthTypography.LabelL.textStyle
+                        "Aplikasi ini membutuhkan izin lokasi untuk menampilkan peta.",
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 32.dp)
                     )
                 }
             }
-        }
 
-        // Floating "My Location" button
-        AnimatedVisibility(
-            visible = !isSheetVisible,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .offset(x = (-20).dp, y = (-180).dp)
-        ) {
-            IconButton(
-                onClick = { /* Focus map to user location */ },
-                modifier = Modifier
-                    .size(56.dp)
-                    .shadow(elevation = 6.dp, shape = CircleShape)
-                    .background(color = GrowthScheme.White.color, shape = CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MyLocation,
-                    contentDescription = "My location",
-                    tint = GrowthScheme.Primary.color
-                )
-            }
-        }
-
-        // Modal bottom sheet
-        if (isSheetVisible) {
-            ModalBottomSheet(
-                onDismissRequest = { isSheetVisible = false },
-                sheetState = sheetState,
-                containerColor = GrowthScheme.White.color,
-                dragHandle = { BottomSheetDefaults.DragHandle() }
-            ) {
+            // Sisa UI lainnya (Floating buttons dan Bottom Sheet) tetap di sini
+            AnimatedVisibility(visible = !isSheetVisible) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 500.dp)
-                        .padding(horizontal = 16.dp)
+                        .fillMaxSize()
+                        .padding(bottom = 20.dp), // <-- Sesuaikan padding jika perlu
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Bottom
                 ) {
-                    Text(
-                        text = "TPS Locations (${tpsList.size})",
-                        style = GrowthTypography.HeadingM.textStyle,
-                        modifier = Modifier.padding(bottom = 12.dp),
-                        color = GrowthScheme.Primary.color
-                    )
-
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(bottom = 30.dp)
+                    ElevatedButton(
+                        onClick = { isSheetVisible = true },
+                        shape = RoundedCornerShape(30.dp),
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = GrowthScheme.White.color,
+                            contentColor = GrowthScheme.Primary.color
+                        )
                     ) {
-                        items(tpsList) { tps ->
-                            TPSCard(tps)
+                        Icon(Icons.Default.List, contentDescription = "List")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Show list",
+                            style = GrowthTypography.LabelL.textStyle
+                        )
+                    }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = !isSheetVisible,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (-20).dp, y = (-120).dp) // <-- Sesuaikan padding jika perlu
+            ) {
+                IconButton(
+                    onClick = {
+                        if (locationPermissionsState.allPermissionsGranted) {
+                            coroutineScope.launch {
+                                try {
+                                    val lastKnownLocation = locationClient.lastLocation.await()
+                                    if (lastKnownLocation != null) {
+                                        val myLocation = LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude)
+
+                                        // Sekarang `animate` dipanggil dari dalam coroutine scope yang benar
+                                        cameraPositionState.animate(
+                                            update = CameraUpdateFactory.newLatLngZoom(myLocation, 15f),
+                                            durationMs = 1000
+                                        )
+                                    } else {
+                                        // Handle kasus di mana lokasi tidak tersedia
+                                        // (misalnya, lokasi dimatikan di perangkat)
+                                        // Anda bisa menampilkan Toast atau Snackbar di sini
+                                    }
+                                } catch (e: Exception) {
+                                    // Handle kemungkinan exception saat mengambil lokasi
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .size(56.dp)
+                        .shadow(elevation = 6.dp, shape = CircleShape)
+                        .background(color = GrowthScheme.White.color, shape = CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MyLocation,
+                        contentDescription = "My location",
+                        tint = GrowthScheme.Primary.color
+                    )
+                }
+            }
+
+            if (isSheetVisible) {
+                ModalBottomSheet(
+                    onDismissRequest = { isSheetVisible = false },
+                    sheetState = sheetState,
+                    containerColor = GrowthScheme.White.color,
+                    dragHandle = { BottomSheetDefaults.DragHandle() }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 500.dp)
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Text(
+                            text = "Lokasi TPS (${tpsList.size})",
+                            style = GrowthTypography.HeadingM.textStyle,
+                            modifier = Modifier.padding(bottom = 12.dp),
+                            color = GrowthScheme.Primary.color
+                        )
+
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(bottom = 30.dp)
+                        ) {
+                            items(tpsList) { tps ->
+                                TPSCard(tps)
+                            }
                         }
                     }
                 }
@@ -138,81 +254,7 @@ fun MapsScreen(authenticatedNavController: NavController) {
 
 
 @Composable
-fun GridBackground(
-    lineColor: androidx.compose.ui.graphics.Color = GrowthScheme.Disabled.color.copy(alpha = 0.4f),
-    spacing: Dp = 100.dp
-) {
-    val spacingPx = with(LocalDensity.current) { spacing.toPx() }
-
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        var x = 0f
-        while (x < size.width) {
-            drawLine(
-                color = lineColor,
-                start = Offset(x, 0f),
-                end = Offset(x, size.height),
-                strokeWidth = 1f
-            )
-            x += spacingPx
-        }
-
-        var y = 0f
-        while (y < size.height) {
-            drawLine(
-                color = lineColor,
-                start = Offset(0f, y),
-                end = Offset(size.width, y),
-                strokeWidth = 1f
-            )
-            y += spacingPx
-        }
-    }
-}
-
-@Composable
-fun MarkerLayer() {
-    val markerPositions = listOf(
-        Offset(0.45f, 0.5f),
-        Offset(0.55f, 0.6f),
-        Offset(0.52f, 0.4f),
-        Offset(0.4f, 0.45f),
-        Offset(0.6f, 0.55f)
-    )
-
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val width = constraints.maxWidth.toFloat()
-        val height = constraints.maxHeight.toFloat()
-
-        // User location marker
-        Box(
-            modifier = Modifier
-                .offset(
-                    x = with(LocalDensity.current) { (width * 0.5f).toDp() - 6.dp },
-                    y = with(LocalDensity.current) { (height * 0.55f).toDp() - 6.dp }
-                )
-                .size(12.dp)
-                .background(GrowthScheme.Secondary.color, shape = RoundedCornerShape(6.dp))
-        )
-
-        // Partner markers
-        markerPositions.forEach { offset ->
-            Icon(
-                imageVector = Icons.Default.Place,
-                contentDescription = "Marker",
-                tint = GrowthScheme.Error.color,
-                modifier = Modifier
-                    .offset(
-                        x = with(LocalDensity.current) { (width * offset.x).toDp() },
-                        y = with(LocalDensity.current) { (height * offset.y).toDp() }
-                    )
-                    .size(32.dp)
-            )
-        }
-    }
-}
-
-@Composable
-fun TPSCard(tps: TPSData) {
+fun TPSCard(tps: TPS) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -229,7 +271,10 @@ fun TPSCard(tps: TPSData) {
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(GrowthScheme.Secondary.color.copy(alpha = 0.15f), shape = RoundedCornerShape(10.dp)),
+                    .background(
+                        GrowthScheme.Secondary.color.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(10.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -259,9 +304,3 @@ fun TPSCard(tps: TPSData) {
         }
     }
 }
-
-data class TPSData(
-    val name: String,
-    val address: String,
-    val distance: String
-)
