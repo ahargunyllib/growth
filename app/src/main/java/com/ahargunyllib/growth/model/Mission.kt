@@ -1,7 +1,14 @@
 package com.ahargunyllib.growth.model
 
+import androidx.compose.ui.graphics.vector.ImageVector
+
 data class Mission(
     val id: String = "",
+    val icon: ImageVector,
+    val category: String,
+    val description: String,
+    val points: Int,
+    val progress: Float
 )
 
 data class MissionProgress(

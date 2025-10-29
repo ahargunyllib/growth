@@ -61,6 +61,14 @@ sealed class GrowthTypography(val textStyle: TextStyle) {
         )
     )
 
+    data object BodyS : GrowthTypography(
+        TextStyle(
+            fontFamily = Nunito,
+            fontWeight = FontWeight.Normal,
+            fontSize = 12.sp
+        )
+    )
+
     // Labels / Captions
     data object LabelL : GrowthTypography(
         TextStyle(
