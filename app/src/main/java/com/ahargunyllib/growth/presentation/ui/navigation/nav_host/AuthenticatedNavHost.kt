@@ -3,6 +3,7 @@ package com.ahargunyllib.growth.presentation.ui.navigation.nav_host
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -21,19 +22,32 @@ import com.ahargunyllib.growth.presentation.view.authenticated.ProfileScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.ScanQRScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.SuccessDepositScreen
 import com.ahargunyllib.growth.presentation.viewmodel.NavbarViewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 @Composable
 fun AuthenticatedNavHost(rootNavController: NavController) {
     val authenticatedNavController = rememberNavController()
-
     val navbarViewModel = hiltViewModel<NavbarViewModel>()
+
+    // Dapatkan route yang sedang aktif
+    val navBackStackEntry by authenticatedNavController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // Tentukan screen yang boleh menampilkan navbar
+    val showNavbarRoutes = listOf(
+        AuthenticatedNavObj.HomeScreen.route,
+        AuthenticatedNavObj.AchievementScreen.route,
+        AuthenticatedNavObj.ProfileScreen.route
+    )
 
     Scaffold(
         bottomBar = {
-            Navbar(
-                authenticatedNavController = authenticatedNavController,
-                navbarViewModel = navbarViewModel
-            )
+            if (currentRoute in showNavbarRoutes) {
+                Navbar(
+                    authenticatedNavController = authenticatedNavController,
+                    navbarViewModel = navbarViewModel
+                )
+            }
         }
     ) { innerPadding ->
         NavHost(
@@ -102,7 +116,7 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
                         )
                     }
                 )
-                
+
                 composable(
                     route = AuthenticatedNavObj.AchievementScreen.route,
                     content = {
