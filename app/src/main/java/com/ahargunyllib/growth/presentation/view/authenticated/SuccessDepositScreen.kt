@@ -1,7 +1,6 @@
 package com.ahargunyllib.growth.presentation.view.authenticated
 
 import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -15,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -154,7 +154,9 @@ fun SuccessDepositScreen(
                 }
 
                 Button(
-                    onClick = { },
+                    onClick = {
+                        authenticatedNavController.navigate(AuthenticatedNavObj.HistoryDepositScreen.route)
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
