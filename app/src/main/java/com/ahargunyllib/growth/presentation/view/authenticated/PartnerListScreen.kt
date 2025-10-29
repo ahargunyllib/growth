@@ -1,6 +1,5 @@
 package com.ahargunyllib.growth.presentation.view.authenticated
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,73 +9,48 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.ahargunyllib.growth.R
+import com.ahargunyllib.growth.model.Partner
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
+import com.ahargunyllib.growth.presentation.viewmodel.PartnerListViewModel
+import com.ahargunyllib.growth.utils.Resource
 
 
-data class Partner(
-    val id: Int,
-    val name: String,
-    val address: String,
-    val distance: String,
-    val imageRes: Int
-)
 
 
 @Composable
-fun PartnerListScreen(authenticatedNavController: NavController) {
-
+fun PartnerListScreen(
+    authenticatedNavController: NavController,
+    viewModel: PartnerListViewModel = hiltViewModel()
+) {
     var searchQuery by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
+    val partnersState by viewModel.partnersState.collectAsState()
 
-    val partnerList = listOf(
-        Partner(
-            id = 1,
-            name = "TPS 3R Baraya Runtah",
-            address = "Sukaluyu, Telukjambe Timur",
-            distance = "1 Km",
-            imageRes = R.drawable.mitra1
-        ),
-        Partner(
-            id = 2,
-            name = "Bank Sampah DLHK Karawang",
-            address = "Jl. Bypass Tanjungpura, Karawang Barat",
-            distance = "2 Km",
-            imageRes = R.drawable.mitra2
-        ),
-        Partner(
-            id = 3,
-            name = "Bank Sampah Cipta Usaha Mandiri",
-            address = "Tegalsawah, Kec. Karawang Timur",
-            distance = "4 Km",
-            imageRes = R.drawable.mitra3
-        )
-    )
+    LaunchedEffect(Unit) {
+        viewModel.getAllPartners()
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(GrowthScheme.Background.color)
     ) {
-
-        // ================= TOP BAR =================
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -113,7 +87,6 @@ fun PartnerListScreen(authenticatedNavController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ================= SEARCH BAR =================
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -122,15 +95,13 @@ fun PartnerListScreen(authenticatedNavController: NavController) {
                 .padding(horizontal = 24.dp),
             placeholder = {
                 Text(
-                    text = "Cari",
+                    text = "Cari Mitra",
                     style = GrowthTypography.BodyM.textStyle.copy(fontSize = 14.sp),
                     color = GrowthScheme.Black2.color
                 )
             },
             trailingIcon = {
-                IconButton(onClick = {
-                    keyboardController?.hide()
-                }) {
+                IconButton(onClick = { keyboardController?.hide() }) {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
@@ -139,11 +110,7 @@ fun PartnerListScreen(authenticatedNavController: NavController) {
                 }
             },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    keyboardController?.hide()
-                }
-            ),
+            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
             shape = RoundedCornerShape(30.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = GrowthScheme.Primary.color,
@@ -156,61 +123,58 @@ fun PartnerListScreen(authenticatedNavController: NavController) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // ================= LOCATION CHIP =================
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = GrowthScheme.Primary.color.copy(alpha = 0.15f)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
+        when (partnersState) {
+            is Resource.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Location",
-                        tint = GrowthScheme.Primary.color,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    CircularProgressIndicator(color = GrowthScheme.Primary.color)
+                }
+            }
+
+            is Resource.Success -> {
+                val partners = (partnersState as Resource.Success<List<Partner>>).data ?: emptyList()
+                val filteredPartners = partners.filter {
+                    it.name.contains(searchQuery, ignoreCase = true) ||
+                            it.address.contains(searchQuery, ignoreCase = true)
+                }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(filteredPartners) { partner ->
+                        PartnerCard(partner)
+                    }
+                }
+            }
+
+            is Resource.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = "Malang",
-                        style = GrowthTypography.BodyM.textStyle.copy(fontSize = 13.sp),
-                        color = GrowthScheme.Primary.color
+                        text = (partnersState as Resource.Error).message
+                            ?: "Gagal memuat data",
+                        color = GrowthScheme.Black2.color
                     )
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ================= PARTNER LIST =================
-        val filteredPartners = partnerList.filter { partner ->
-            partner.name.contains(searchQuery, ignoreCase = true) ||
-                    partner.address.contains(searchQuery, ignoreCase = true)
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(filteredPartners) { partner ->
-                PartnerCard(partner)
-            }
-        }
     }
+
+
+
+
 }
 
-// ======================================================
-// ================ PARTNER CARD =========================
-// ======================================================
+
+
+
 @Composable
 fun PartnerCard(partner: Partner) {
     Card(
@@ -219,54 +183,26 @@ fun PartnerCard(partner: Partner) {
         colors = CardDefaults.cardColors(containerColor = GrowthScheme.White.color),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = partner.imageRes),
-                contentDescription = partner.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(RoundedCornerShape(10.dp))
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = partner.name,
+                style = GrowthTypography.BodyL.textStyle.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp
+                ),
+                color = GrowthScheme.Black.color
             )
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = partner.name,
-                    style = GrowthTypography.BodyL.textStyle.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp
-                    ),
-                    color = GrowthScheme.Black.color
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Location",
+                    tint = GrowthScheme.Primary.color,
+                    modifier = Modifier.size(16.dp)
                 )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Location",
-                        tint = GrowthScheme.Black2.color,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = partner.address,
-                        style = GrowthTypography.BodyM.textStyle.copy(fontSize = 13.sp),
-                        color = GrowthScheme.Black2.color
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(2.dp))
-
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = partner.distance,
+                    text = partner.address,
                     style = GrowthTypography.BodyM.textStyle.copy(fontSize = 13.sp),
                     color = GrowthScheme.Black2.color
                 )

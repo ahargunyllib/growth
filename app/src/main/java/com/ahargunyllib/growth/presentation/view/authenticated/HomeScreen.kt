@@ -218,7 +218,9 @@ fun HomeScreen(
                 authenticatedNavController.navigate(AuthenticatedNavObj.ScanQR.route)
             })
             Spacer(modifier = Modifier.width(20.dp))
-            MenuBox(icon = Icons.Default.Handshake, title = "Mitra")
+            MenuBox(icon = Icons.Default.Handshake, title = "Mitra", onClick = {
+                authenticatedNavController.navigate(AuthenticatedNavObj.PartnerList.route)
+            })
         }
 
         // ================= MISI =================

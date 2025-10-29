@@ -21,6 +21,8 @@ import com.ahargunyllib.growth.presentation.view.authenticated.ProfileScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.ScanQRScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.SuccessDepositScreen
 import com.ahargunyllib.growth.presentation.viewmodel.NavbarViewModel
+import com.ahargunyllib.growth.presentation.view.authenticated.PartnerListScreen
+
 
 @Composable
 fun AuthenticatedNavHost(rootNavController: NavController) {
@@ -85,6 +87,16 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
                         )
                     }
                 )
+
+                composable(
+                    route = AuthenticatedNavObj.PartnerList.route,
+                    content = {
+                        PartnerListScreen(
+                            authenticatedNavController = authenticatedNavController
+                        )
+                    }
+                )
+
 
                 composable(
                     route = AuthenticatedNavObj.SuccessDeposit.route,
