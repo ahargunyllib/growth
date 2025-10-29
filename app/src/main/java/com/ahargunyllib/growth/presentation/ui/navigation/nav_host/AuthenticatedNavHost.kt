@@ -3,6 +3,7 @@ package com.ahargunyllib.growth.presentation.ui.navigation.nav_host
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -39,6 +40,16 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
         AuthenticatedNavObj.AchievementScreen.route,
         AuthenticatedNavObj.ProfileScreen.route
     )
+
+    LaunchedEffect(currentRoute) {
+        val pageIndex = when (currentRoute) {
+            AuthenticatedNavObj.HomeScreen.route -> 0
+            AuthenticatedNavObj.AchievementScreen.route -> 1
+            AuthenticatedNavObj.ProfileScreen.route -> 2
+            else -> return@LaunchedEffect
+        }
+        navbarViewModel.setPageState(pageIndex)
+    }
 
     Scaffold(
         bottomBar = {
