@@ -24,6 +24,8 @@ import com.ahargunyllib.growth.presentation.view.authenticated.ScanQRScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.SuccessDepositScreen
 import com.ahargunyllib.growth.presentation.viewmodel.NavbarViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.ahargunyllib.growth.presentation.view.authenticated.HistoryDepositScreen
+
 
 @Composable
 fun AuthenticatedNavHost(rootNavController: NavController) {
@@ -127,6 +129,11 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
                         )
                     }
                 )
+
+                composable(AuthenticatedNavObj.HistoryDepositScreen.route) {
+                    HistoryDepositScreen(navController = authenticatedNavController)
+                }
+
 
                 composable(
                     route = AuthenticatedNavObj.AchievementScreen.route,

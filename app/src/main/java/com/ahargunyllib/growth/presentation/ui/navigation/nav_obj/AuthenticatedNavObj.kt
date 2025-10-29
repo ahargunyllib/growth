@@ -12,4 +12,5 @@ sealed class AuthenticatedNavObj(val route: String) {
     }
     
     data object AchievementScreen: AuthenticatedNavObj("achievement")
+    data object HistoryDepositScreen : AuthenticatedNavObj("history_deposit_screen")
 }
