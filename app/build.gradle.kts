@@ -127,6 +127,6 @@ dependencies {
 
     implementation(libs.guava)
 
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation(libs.play.services.maps)
 
 }
