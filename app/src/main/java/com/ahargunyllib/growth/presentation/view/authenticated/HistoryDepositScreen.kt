@@ -291,8 +291,9 @@ fun FilterDropdown() {
 fun HistoryItemCard(collection: Collection) {
     val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
     val formattedDate = try {
-        val timestamp = collection.createdAt.toLongOrNull() ?: 0L
-        dateFormat.format(Date(timestamp))
+        collection.createdAt.toLongOrNull()?.let { timestamp ->
+            dateFormat.format(Date(timestamp))
+        } ?: collection.createdAt
     } catch (e: Exception) {
         collection.createdAt
     }
@@ -349,8 +350,13 @@ fun HistoryItemCard(collection: Collection) {
                         )
                     )
 
+                    val weightLabel = if (collection.totalWeightKg % 1.0 == 0.0) {
+                        "${collection.totalWeightKg.toLong()} Kg"
+                    } else {
+                        String.format(Locale("id", "ID"), "%.2f Kg", collection.totalWeightKg)
+                    }
                     Text(
-                        text = "${collection.totalWeightKg.toInt()} Kg",
+                        text = weightLabel,
                         style = GrowthTypography.BodyM.textStyle,
                         color = GrowthScheme.Black.color
                     )
