@@ -4,26 +4,11 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,6 +31,7 @@ import coil.compose.AsyncImage
 import com.ahargunyllib.growth.R
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
+import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.RootNavObj
 import com.ahargunyllib.growth.presentation.viewmodel.ProfileViewModel
 import com.ahargunyllib.growth.utils.Resource
@@ -68,7 +54,6 @@ fun ProfileScreen(
             is Resource.Error -> {
                 Toast.makeText(context, state.resource.message, Toast.LENGTH_SHORT).show()
             }
-
             else -> {}
         }
     }
@@ -100,6 +85,7 @@ fun ProfileScreen(
                         .clip(CircleShape)
                 )
             }
+
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = state.resource.data?.name ?: "Unknown",
@@ -138,7 +124,13 @@ fun ProfileScreen(
                         .shadow(4.dp, RoundedCornerShape(24.dp))
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        MenuItem(icon = Icons.Default.History, text = "Riwayat Setor")
+                        MenuItem(
+                            icon = Icons.Default.History,
+                            text = "Riwayat Setor",
+                            onClick = {
+                                authenticatedNavController.navigate(AuthenticatedNavObj.HistoryDepositScreen.route)
+                            }
+                        )
                         MenuItem(icon = Icons.Default.Edit, text = "Edit Profile")
                         MenuItem(icon = Icons.Default.Settings, text = "Setting Account")
                         MenuItem(icon = Icons.Default.Info, text = "About App")
@@ -149,23 +141,21 @@ fun ProfileScreen(
                 LogoutButton(onPress = {
                     viewModel.logout()
                     rootNavController.navigate(RootNavObj.Unauthenticated.route) {
-                        popUpTo(0) {
-                            inclusive = true
-                        }
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
-                 })
+                })
             }
         }
     }
 }
 
 @Composable
-fun MenuItem(icon: ImageVector, text: String) {
+fun MenuItem(icon: ImageVector, text: String, onClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
+            .clickable { onClick() }
             .padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -198,15 +188,10 @@ fun LogoutButton(onPress: () -> Unit) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(GrowthScheme.Error.color)
-            .clickable {
-                onPress()
-            }
+            .clickable { onPress() }
             .padding(vertical = 14.dp, horizontal = 20.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.align(Alignment.CenterStart)
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Default.Logout,
                 contentDescription = null,

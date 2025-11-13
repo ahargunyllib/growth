@@ -61,7 +61,7 @@ class HomeViewModel @Inject constructor(
                             isLoading = false
                         )
                     }
-                    Log.e(TAG, "Failed to load user: ${result.message}")
+                    Log.e(TAG, "Failed to load user : ${result.message}")
                 }
                 is Resource.Loading -> {
                     // Already loading
