@@ -1,6 +1,5 @@
 package com.ahargunyllib.growth.presentation.view.authenticated
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,45 +19,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.ahargunyllib.growth.model.Collection
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
-import androidx.compose.ui.text.style.TextOverflow
-
-
-data class DepositHistory(
-    val id: String,
-    val date: String,
-    val title: String,
-    val weight: Float,
-    val points: Int,
-    val location: String,
-    val status: String
-)
+import com.ahargunyllib.growth.presentation.viewmodel.HistoryDepositViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryDepositScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: HistoryDepositViewModel = hiltViewModel()
 ) {
-    // Dummy data
-    val historyList = remember {
-        listOf(
-            DepositHistory(
-                id = "1",
-                date = "22 Agu 2024",
-                title = "Hasil Setoran",
-                weight = 10f,
-                points = 5000,
-                location = "TPS 3R Baraya Runtah.",
-                status = "Setoran Selesai"
-            )
-        )
-    }
+    val historyState by viewModel.historyState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -100,14 +79,128 @@ fun HistoryDepositScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(historyList) { item ->
-                    HistoryItemCard(item)
+            when {
+                historyState.isLoading -> {
+                    LoadingState()
+                }
+
+                historyState.error != null -> {
+                    ErrorState(
+                        errorMessage = historyState.error!!,
+                        onRetry = { viewModel.retryLoad() }
+                    )
+                }
+
+                historyState.isEmpty -> {
+                    EmptyState()
+                }
+
+                else -> {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(historyState.collections) { collection ->
+                            HistoryItemCard(collection)
+                        }
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun LoadingState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CircularProgressIndicator(
+                color = GrowthScheme.Primary.color
+            )
+            Text(
+                text = "Memuat riwayat setoran...",
+                style = GrowthTypography.BodyM.textStyle,
+                color = GrowthScheme.Black.color
+            )
+        }
+    }
+}
+
+@Composable
+fun ErrorState(errorMessage: String, onRetry: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Text(
+                text = "❌",
+                style = GrowthTypography.HeadingL.textStyle,
+                fontSize = 48.sp
+            )
+            Text(
+                text = errorMessage,
+                style = GrowthTypography.BodyM.textStyle,
+                color = GrowthScheme.Black.color,
+                textAlign = TextAlign.Center
+            )
+            Button(
+                onClick = onRetry,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = GrowthScheme.Primary.color
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "Coba Lagi",
+                    style = GrowthTypography.BodyM.textStyle,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.ShoppingBag,
+                contentDescription = "Empty",
+                tint = GrowthScheme.Primary.color.copy(alpha = 0.5f),
+                modifier = Modifier.size(80.dp)
+            )
+            Text(
+                text = "Belum Ada Riwayat Setoran",
+                style = GrowthTypography.LabelL.textStyle.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = GrowthScheme.Black.color
+            )
+            Text(
+                text = "Mulai setor sampah untuk mendapatkan poin",
+                style = GrowthTypography.BodyM.textStyle,
+                color = GrowthScheme.Black.color.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -120,7 +213,6 @@ fun FilterDropdown() {
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
-        // [FIX] Mengganti OutlinedButton menjadi Button dengan warna abu-abu
         Button(
             onClick = { expanded = true },
             shape = RoundedCornerShape(8.dp),
@@ -196,7 +288,16 @@ fun FilterDropdown() {
 }
 
 @Composable
-fun HistoryItemCard(item: DepositHistory) {
+fun HistoryItemCard(collection: Collection) {
+    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
+    val formattedDate = try {
+        collection.createdAt.toLongOrNull()?.let { timestamp ->
+            dateFormat.format(Date(timestamp))
+        } ?: collection.createdAt
+    } catch (e: Exception) {
+        collection.createdAt
+    }
+
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
@@ -211,7 +312,7 @@ fun HistoryItemCard(item: DepositHistory) {
                 .padding(16.dp)
         ) {
             Text(
-                text = item.date,
+                text = formattedDate,
                 style = GrowthTypography.BodyM.textStyle,
                 color = GrowthScheme.Black.color
             )
@@ -242,15 +343,20 @@ fun HistoryItemCard(item: DepositHistory) {
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = item.title,
+                        text = "Hasil Setoran",
                         style = GrowthTypography.LabelL.textStyle.copy(
                             fontWeight = FontWeight.Bold,
                             color = GrowthScheme.Black.color
                         )
                     )
 
+                    val weightLabel = if (collection.totalWeightKg % 1.0 == 0.0) {
+                        "${collection.totalWeightKg.toLong()} Kg"
+                    } else {
+                        String.format(Locale("id", "ID"), "%.2f Kg", collection.totalWeightKg)
+                    }
                     Text(
-                        text = "${item.weight.toInt()} Kg",
+                        text = weightLabel,
                         style = GrowthTypography.BodyM.textStyle,
                         color = GrowthScheme.Black.color
                     )
@@ -275,13 +381,12 @@ fun HistoryItemCard(item: DepositHistory) {
                         }
 
                         Text(
-                            text = "${item.points}",
+                            text = "${collection.receivedPoints}",
                             style = GrowthTypography.BodyM.textStyle,
                             color = GrowthScheme.Black.color
                         )
                     }
 
-                    // [FIX] Location Badge agar ukurannya memeluk konten
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -297,7 +402,7 @@ fun HistoryItemCard(item: DepositHistory) {
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = item.location,
+                            text = "Partner ID: ${collection.partnerId}",
                             style = GrowthTypography.BodyM.textStyle.copy(
                                 fontSize = 12.sp
                             ),
@@ -310,18 +415,16 @@ fun HistoryItemCard(item: DepositHistory) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = item.status,
+                text = collection.status.label,
                 style = GrowthTypography.BodyM.textStyle.copy(
                     fontWeight = FontWeight.SemiBold
                 ),
-                color = GrowthScheme.Secondary.color
+                color = when (collection.status.value) {
+                    "success" -> GrowthScheme.Secondary.color
+                    "failed" -> Color.Red
+                    else -> Color.Gray
+                }
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewHistoryDepositScreen() {
-    HistoryDepositScreen(navController = rememberNavController())
 }
