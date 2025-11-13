@@ -126,4 +126,7 @@ dependencies {
     implementation(libs.gson)
 
     implementation(libs.guava)
+
+    implementation(libs.play.services.maps)
+
 }
