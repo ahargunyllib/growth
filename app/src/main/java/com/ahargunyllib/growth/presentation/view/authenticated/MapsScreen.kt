@@ -2,6 +2,11 @@ package com.ahargunyllib.growth.presentation.view.authenticated
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,27 +21,31 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.ahargunyllib.growth.R
 import com.ahargunyllib.growth.model.TPS
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
-import com.ahargunyllib.growth.presentation.ui.design_system.Theme
+import com.ahargunyllib.growth.presentation.viewmodel.MapsViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -44,9 +53,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
-@SuppressLint("MissingPermission") // Ini aman karena kita mengecek izin sebelum menggunakannya
+@SuppressLint("MissingPermission")
 @Composable
-fun MapsScreen(authenticatedNavController: NavController) {
+fun MapsScreen(
+    authenticatedNavController: NavController, mapsViewModel: MapsViewModel = viewModel()
+) {
 
     val locationPermissionsState = rememberMultiplePermissionsState(
         listOf(
@@ -62,20 +73,37 @@ fun MapsScreen(authenticatedNavController: NavController) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isSheetVisible by remember { mutableStateOf(false) }
 
-    val tpsList = listOf(
-        TPS("Tempat Pembuangan Sampah Dinoyo", "Jl. Mertojoyo, Merjosari, Kec. Lowokwaru, Kota Malang, Jawa Timur 65144", "1 Km", LatLng(-7.946083, 112.603944)),
-        TPS("TPS sumbersari kota malang", "Jl. Bendungan Sutami No.54SumbersariKec, Kec. Lowokwaru, Kota Malang, Jawa Timur 65145", "2 Km", LatLng(-7.960843, 112.613567)),
-        TPS("TPS Doro - Karngbesuki", "Jl. Raya Candi V No.757, Doro, Karangbesuki, Kec. Sukun, Kabupaten Malang, Jawa Timur 65149", "3 Km", LatLng(-7.954151, 112.595981)),
-        )
+    val tpsList by mapsViewModel.tpsList.collectAsState()
+    val polylinePoints by mapsViewModel.polylinePoints.collectAsState()
 
-    val karawang = LatLng(-7.954222, 112.616611)
+    val defaultLocation = LatLng(-7.954222, 112.616611)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(karawang, 12f)
+        position = CameraPosition.fromLatLngZoom(defaultLocation, 12f)
     }
 
-    // Inisialisasi variabel untuk Fused Location Provider dan Coroutine Scope
     val context = LocalContext.current
     val locationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    var userLocation by remember { mutableStateOf<LatLng?>(null) }
+
+    LaunchedEffect(locationPermissionsState.allPermissionsGranted) {
+        if (locationPermissionsState.allPermissionsGranted) {
+            try {
+                val lastKnownLocation = locationClient.lastLocation.await()
+                if (lastKnownLocation != null) {
+                    val myLocation = LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude)
+                    userLocation = myLocation
+                    mapsViewModel.calculateDistances(myLocation)
+                    cameraPositionState.animate(
+                        update = CameraUpdateFactory.newLatLngZoom(myLocation, 15f),
+                        durationMs = 1000
+                    )
+                }
+            } catch (e: Exception) {
+                // Handle exceptions
+            }
+        }
+    }
+
     val coroutineScope = rememberCoroutineScope()
 
 
@@ -121,12 +149,22 @@ fun MapsScreen(authenticatedNavController: NavController) {
                         zoomGesturesEnabled = true
                     )
                 ) {
+                    val customMarkerIcon = bitmapDescriptorFromVector(
+                        context,
+                        R.drawable.ic_tps_marker,
+                        GrowthScheme.Primary.color.toArgb()
+                    )
+
                     tpsList.forEach { tps ->
-                        Marker(
+                        MarkerInfoWindow(
                             state = MarkerState(position = tps.location),
-                            title = tps.name,
-                            snippet = tps.address
-                        )
+                            icon = customMarkerIcon,
+                        ) { _ ->
+                            TPSInfoWindow(tps = tps)
+                        }
+                    }
+                    if (polylinePoints.isNotEmpty()) {
+                        Polyline(points = polylinePoints, color = GrowthScheme.Primary.color, width = 8f)
                     }
                 }
             } else {
@@ -145,12 +183,11 @@ fun MapsScreen(authenticatedNavController: NavController) {
                 }
             }
 
-            // Sisa UI lainnya (Floating buttons dan Bottom Sheet) tetap di sini
             AnimatedVisibility(visible = !isSheetVisible) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 20.dp), // <-- Sesuaikan padding jika perlu
+                        .padding(bottom = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Bottom
                 ) {
@@ -177,7 +214,7 @@ fun MapsScreen(authenticatedNavController: NavController) {
                 visible = !isSheetVisible,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .offset(x = (-20).dp, y = (-120).dp) // <-- Sesuaikan padding jika perlu
+                    .offset(x = (-20).dp, y = (-120).dp)
             ) {
                 IconButton(
                     onClick = {
@@ -188,18 +225,13 @@ fun MapsScreen(authenticatedNavController: NavController) {
                                     if (lastKnownLocation != null) {
                                         val myLocation = LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude)
 
-                                        // Sekarang `animate` dipanggil dari dalam coroutine scope yang benar
                                         cameraPositionState.animate(
                                             update = CameraUpdateFactory.newLatLngZoom(myLocation, 15f),
                                             durationMs = 1000
                                         )
-                                    } else {
-                                        // Handle kasus di mana lokasi tidak tersedia
-                                        // (misalnya, lokasi dimatikan di perangkat)
-                                        // Anda bisa menampilkan Toast atau Snackbar di sini
                                     }
                                 } catch (e: Exception) {
-                                    // Handle kemungkinan exception saat mengambil lokasi
+                                    // Handle exception
                                 }
                             }
                         }
@@ -242,7 +274,23 @@ fun MapsScreen(authenticatedNavController: NavController) {
                             contentPadding = PaddingValues(bottom = 30.dp)
                         ) {
                             items(tpsList) { tps ->
-                                TPSCard(tps)
+                                TPSCard(tps = tps) {
+                                    isSheetVisible = false
+                                    coroutineScope.launch {
+                                        val apiKey = context.packageManager
+                                            .getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
+                                            .metaData.getString("com.google.android.geo.API_KEY")
+
+                                        if (apiKey != null && userLocation != null) {
+                                            mapsViewModel.getDirections(apiKey, userLocation!!, tps.location)
+                                        }
+
+                                        cameraPositionState.animate(
+                                            update = CameraUpdateFactory.newLatLngZoom(tps.location, 15f),
+                                            durationMs = 1000
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -253,9 +301,11 @@ fun MapsScreen(authenticatedNavController: NavController) {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TPSCard(tps: TPS) {
+fun TPSCard(tps: TPS, onClick: () -> Unit) {
     ElevatedCard(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(90.dp),
@@ -284,16 +334,20 @@ fun TPSCard(tps: TPS) {
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = tps.name,
-                    style = GrowthTypography.HeadingM.textStyle,
-                    color = GrowthScheme.Black2.color
+                    style = GrowthTypography.LabelL.textStyle,
+                    color = GrowthScheme.Black2.color,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = tps.address,
                     style = GrowthTypography.BodyM.textStyle,
-                    color = GrowthScheme.Disabled.color
+                    color = GrowthScheme.Disabled.color,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = tps.distance,
@@ -302,5 +356,52 @@ fun TPSCard(tps: TPS) {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun TPSInfoWindow(tps: TPS) {
+    Card(
+        modifier = Modifier.padding(8.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = tps.name,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = tps.address,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (tps.distance.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Distance: ${tps.distance}",
+                    fontWeight = FontWeight.Bold,
+                    color = GrowthScheme.Primary.color
+                )
+            }
+        }
+    }
+}
+
+fun bitmapDescriptorFromVector(context: Context, @DrawableRes vectorResId: Int, tintColor: Int): BitmapDescriptor? {
+    return ContextCompat.getDrawable(context, vectorResId)?.run {
+        val wrappedDrawable = DrawableCompat.wrap(this)
+        DrawableCompat.setTint(wrappedDrawable, tintColor)
+        setBounds(0, 0, intrinsicWidth, intrinsicHeight)
+        val bitmap = Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        wrappedDrawable.draw(canvas)
+        BitmapDescriptorFactory.fromBitmap(bitmap)
     }
 }
