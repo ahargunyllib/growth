@@ -16,14 +16,18 @@ import androidx.navigation.navArgument
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
 import com.ahargunyllib.growth.presentation.ui.widget.common.Navbar
 import com.ahargunyllib.growth.presentation.view.authenticated.AchievementScreen
+import com.ahargunyllib.growth.presentation.view.authenticated.ClaimAchievementScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.ExchangePointScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.HomeScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.MapsScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.ProfileScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.ScanQRScreen
+import com.ahargunyllib.growth.presentation.view.authenticated.SuccessAchievementScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.SuccessDepositScreen
 import com.ahargunyllib.growth.presentation.viewmodel.NavbarViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.ahargunyllib.growth.presentation.view.authenticated.HistoryDepositScreen
+
 
 @Composable
 fun AuthenticatedNavHost(rootNavController: NavController) {
@@ -128,6 +132,11 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
                     }
                 )
 
+                composable(AuthenticatedNavObj.HistoryDepositScreen.route) {
+                    HistoryDepositScreen(navController = authenticatedNavController)
+                }
+
+
                 composable(
                     route = AuthenticatedNavObj.AchievementScreen.route,
                     content = {
@@ -137,6 +146,31 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
                         )
                     }
                 )
+
+                composable(
+                    route = AuthenticatedNavObj.ClaimAchievement.route,
+                    arguments = listOf(navArgument("missionId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    // Ekstrak missionId dari argumen
+                    val missionId = backStackEntry.arguments?.getString("missionId")
+
+                    // Panggil ClaimAchievementScreen dengan missionId
+                    ClaimAchievementScreen(
+                        authenticatedNavController = authenticatedNavController,
+                        missionId = missionId
+                    )
+               }
+
+                composable(
+                    route = AuthenticatedNavObj.SuccessAchievement.route,
+                    arguments = listOf(navArgument("points") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val points = backStackEntry.arguments?.getInt("points")
+                    SuccessAchievementScreen(
+                        authenticatedNavController = authenticatedNavController,
+                        points = points
+                    )
+                }
             }
         )
     }

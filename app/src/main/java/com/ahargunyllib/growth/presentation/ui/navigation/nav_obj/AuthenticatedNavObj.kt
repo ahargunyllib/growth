@@ -10,6 +10,12 @@ sealed class AuthenticatedNavObj(val route: String) {
     data object SuccessDeposit : AuthenticatedNavObj("success_deposit_screen/{points}/{weight}") {
         fun createRoute(points: Int, weight: Float) = "success_deposit_screen/$points/$weight"
     }
-    
     data object AchievementScreen: AuthenticatedNavObj("achievement")
+    data object ClaimAchievement: AuthenticatedNavObj("claim_achievement/{missionId}") {
+        fun createRoute(missionId: String) = "claim_achievement/$missionId"
+    }
+    data object SuccessAchievement: AuthenticatedNavObj("success_achievement/{points}") {
+        fun createRoute(points: Int) = "success_achievement/$points"
+    }
+    data object HistoryDepositScreen : AuthenticatedNavObj("history_deposit_screen")
 }
