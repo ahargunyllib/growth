@@ -146,7 +146,8 @@ fun MapsScreen(
                     uiSettings = MapUiSettings(
                         myLocationButtonEnabled = false,
                         zoomControlsEnabled = false,
-                        zoomGesturesEnabled = true
+                        zoomGesturesEnabled = true,
+                        mapToolbarEnabled = false
                     )
                 ) {
                     val customMarkerIcon = bitmapDescriptorFromVector(

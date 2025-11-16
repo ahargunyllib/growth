@@ -14,7 +14,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Locale
 
 class MapsViewModel : ViewModel() {
 
@@ -57,54 +61,75 @@ class MapsViewModel : ViewModel() {
     }
 
     fun calculateDistances(userLocation: LatLng) {
-        val updatedList = _tpsList.value.map { tps ->
-            val tpsLocation = Location("TPS")
-            tpsLocation.latitude = tps.location.latitude
-            tpsLocation.longitude = tps.location.longitude
+        val tpsWithRawDistance = _tpsList.value.map { tps ->
+            val tpsLocation = Location("TPS").apply {
+                latitude = tps.location.latitude
+                longitude = tps.location.longitude
+            }
 
-            val userLoc = Location("User")
-            userLoc.latitude = userLocation.latitude
-            userLoc.longitude = userLocation.longitude
+            val userLoc = Location("User").apply {
+                latitude = userLocation.latitude
+                longitude = userLocation.longitude
+            }
 
             val distanceInMeters = userLoc.distanceTo(tpsLocation)
-            val distanceInKm = distanceInMeters / 1000
-
-            tps.copy(distance = String.format("%.2f km", distanceInKm))
+            val distanceInKm = distanceInMeters / 1000.0
+            Pair(tps, distanceInKm)
         }
-        _tpsList.value = updatedList.sortedBy { it.distance }
+
+        val sortedTps = tpsWithRawDistance.sortedBy { it.second }
+
+        val finalList = sortedTps.map {
+            it.first.copy(distance = String.format(Locale.US, "%.2f km", it.second))
+        }
+
+        _tpsList.value = finalList
     }
 
     fun getDirections(apiKey: String, origin: LatLng, destination: LatLng) {
         viewModelScope.launch {
-            val url = "https://maps.googleapis.com/maps/api/directions/json?" +
+            val urlString = "https://maps.googleapis.com/maps/api/directions/json?" +
                     "origin=${origin.latitude},${origin.longitude}&" +
                     "destination=${destination.latitude},${destination.longitude}&" +
                     "key=$apiKey"
-            Log.d("MapsViewModel", "Directions URL: $url")
+            Log.d("MapsViewModel", "Requesting directions from: $urlString")
 
             try {
                 val result = withContext(Dispatchers.IO) {
-                    URL(url).readText()
+                    val url = URL(urlString)
+                    val connection = url.openConnection() as HttpURLConnection
+                    connection.requestMethod = "GET"
+
+                    val reader = InputStreamReader(connection.inputStream)
+                    val bufferedReader = BufferedReader(reader)
+                    val stringBuilder = StringBuilder()
+                    var line: String?
+                    while (bufferedReader.readLine().also { line = it } != null) {
+                        stringBuilder.append(line)
+                    }
+                    stringBuilder.toString()
                 }
-                Log.d("MapsViewModel", "Directions Response: $result")
+
                 val jsonObject = JSONObject(result)
-
                 val status = jsonObject.getString("status")
-                if (status != "OK") {
-                    Log.e("MapsViewModel", "Directions API Error: $status - Make sure the API key is valid and the Directions API is enabled.")
+                Log.d("MapsViewModel", "Directions API status: $status")
+
+                if (status == "OK") {
+                    val routes = jsonObject.getJSONArray("routes")
+                    if (routes.length() > 0) {
+                        val points = routes.getJSONObject(0).getJSONObject("overview_polyline").getString("points")
+                        _polylinePoints.value = decodePolyline(points)
+                    } else {
+                        _polylinePoints.value = emptyList()
+                        Log.w("MapsViewModel", "No routes found")
+                    }
+                } else {
+                    Log.e("MapsViewModel", "Directions API error: $status")
                     _polylinePoints.value = emptyList()
-                    return@launch
                 }
 
-                val routes = jsonObject.getJSONArray("routes")
-                if (routes.length() > 0) {
-                    val points = routes.getJSONObject(0).getJSONObject("overview_polyline").getString("points")
-                    _polylinePoints.value = decodePolyline(points)
-                } else {
-                    _polylinePoints.value = emptyList()
-                }
             } catch (e: Exception) {
-                Log.e("MapsViewModel", "Error fetching directions", e)
+                Log.e("MapsViewModel", "Error fetching directions: ", e)
                 _polylinePoints.value = emptyList()
             }
         }

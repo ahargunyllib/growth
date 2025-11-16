@@ -124,9 +124,5 @@ dependencies {
 
     // Gson for JSON parsing
     implementation(libs.gson)
-
     implementation(libs.guava)
-
-    implementation(libs.play.services.maps)
-
 }
