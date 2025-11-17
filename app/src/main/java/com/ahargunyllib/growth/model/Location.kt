@@ -6,4 +6,5 @@ data class TPS(
     val name: String,
     val address: String,
     val distance: String,
-    val location: LatLng)
+    val location: LatLng
+)
