@@ -248,6 +248,19 @@ class ExchangePointViewModel @Inject constructor(
                 // Calculate amount received using integer arithmetic
                 // Apply admin fee in points first, then convert to IDR
                 val pointsAfterFee = pointsToExchange - selectedMethod.adminFee
+
+                // Defensive guard: Prevent zero/negative amounts from being persisted
+                if (pointsAfterFee <= 0) {
+                    _state.update {
+                        it.copy(
+                            isProcessing = false,
+                            error = "Poin tidak mencukupi setelah biaya admin"
+                        )
+                    }
+                    Log.e(TAG, "Invalid exchange: pointsAfterFee = $pointsAfterFee (points=$pointsToExchange, fee=${selectedMethod.adminFee})")
+                    return@launch
+                }
+
                 val amountReceived = pointsAfterFee * selectedMethod.conversionRate
 
                 // Step 1: Get current point account and validate
