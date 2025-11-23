@@ -2,11 +2,13 @@ package com.ahargunyllib.growth.di
 
 import com.ahargunyllib.growth.contract.AuthRepository
 import com.ahargunyllib.growth.contract.CollectionRepository
+import com.ahargunyllib.growth.contract.ExchangeRepository
 import com.ahargunyllib.growth.contract.MissionRepository
 import com.ahargunyllib.growth.contract.PartnerRepository
 import com.ahargunyllib.growth.contract.PointRepository
 import com.ahargunyllib.growth.repository.AuthRepositoryImpl
 import com.ahargunyllib.growth.repository.CollectionRepositoryImpl
+import com.ahargunyllib.growth.repository.ExchangeRepositoryImpl
 import com.ahargunyllib.growth.repository.MissionRepositoryImpl
 import com.ahargunyllib.growth.repository.PartnerRepositoryImpl
 import com.ahargunyllib.growth.repository.PointRepositoryImpl
@@ -48,4 +50,10 @@ abstract class RepositoryModule {
     abstract fun bindPointRepository(
         pointRepositoryImpl: PointRepositoryImpl
     ): PointRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindExchangeRepository(
+        exchangeRepositoryImpl: ExchangeRepositoryImpl
+    ): ExchangeRepository
 }

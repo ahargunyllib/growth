@@ -6,6 +6,9 @@ sealed class AuthenticatedNavObj(val route: String) {
     data object ProfileScreen: AuthenticatedNavObj("profile")
 
     data object ExchangePoint: AuthenticatedNavObj("exchange_point")
+    data object SuccessExchange : AuthenticatedNavObj("success_exchange_screen/{points}/{amount}") {
+        fun createRoute(points: Int, amount: Int) = "success_exchange_screen/$points/$amount"
+    }
     data object ScanQR: AuthenticatedNavObj("scan_qr")
     data object SuccessDeposit : AuthenticatedNavObj("success_deposit_screen/{points}/{weight}") {
         fun createRoute(points: Int, weight: Float) = "success_deposit_screen/$points/$weight"
