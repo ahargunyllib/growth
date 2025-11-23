@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.ahargunyllib.growth.model.ExchangeMethod
 import com.ahargunyllib.growth.model.ExchangeMethodType
 import com.ahargunyllib.growth.model.ExchangeTransaction
+import com.ahargunyllib.growth.model.PointAccount
 import com.ahargunyllib.growth.model.PointPosting
 import com.ahargunyllib.growth.model.PointPostingRefType
 import com.ahargunyllib.growth.usecase.exchange.GetAvailableExchangeMethodsUseCase
@@ -221,6 +222,11 @@ class ExchangePointViewModel @Inject constructor(
         val userId = firebaseAuth.currentUser?.uid ?: return
 
         viewModelScope.launch {
+            // Variables to track state for rollback
+            var originalAccount: PointAccount? = null
+            var balanceUpdated = false
+            var postingCreated = false
+
             try {
                 _state.update {
                     it.copy(
@@ -233,34 +239,9 @@ class ExchangePointViewModel @Inject constructor(
                 // Calculate amount received using integer arithmetic
                 val amountReceived = (pointsToExchange * selectedMethod.conversionRate) - selectedMethod.adminFee
 
-                // Step 1: Create exchange transaction
-                val transaction = ExchangeTransaction(
-                    userId = userId,
-                    methodType = selectedMethod.type,
-                    accountNumber = currentState.accountNumber.trim(),
-                    accountName = currentState.accountName.trim(),
-                    pointsExchanged = pointsToExchange,
-                    amountReceived = amountReceived,
-                    adminFee = selectedMethod.adminFee
-                )
-
-                val exchangeResult = initiateExchangeUseCase(transaction)
-                if (exchangeResult is Resource.Error) {
-                    _state.update {
-                        it.copy(
-                            isProcessing = false,
-                            error = exchangeResult.message ?: "Gagal memulai penukaran"
-                        )
-                    }
-                    return@launch
-                }
-
-                val transactionId = exchangeResult.data
-                Log.d(TAG, "Exchange transaction created: $transactionId")
-
-                // Step 2: Get current point account
+                // Step 1: Get current point account and validate
                 val pointAccountResult = getMyPointAccountUseCase()
-                if (pointAccountResult is Resource.Error) {
+                if (pointAccountResult !is Resource.Success || pointAccountResult.data == null) {
                     _state.update {
                         it.copy(
                             isProcessing = false,
@@ -270,10 +251,22 @@ class ExchangePointViewModel @Inject constructor(
                     return@launch
                 }
 
-                val currentAccount = pointAccountResult.data!!
+                val currentAccount = pointAccountResult.data
+                originalAccount = currentAccount.copy() // Save original for rollback
                 Log.d(TAG, "Current point balance: ${currentAccount.balance}")
 
-                // Step 3: Deduct points from balance
+                // Validate sufficient balance
+                if (currentAccount.balance < pointsToExchange) {
+                    _state.update {
+                        it.copy(
+                            isProcessing = false,
+                            error = "Poin tidak mencukupi"
+                        )
+                    }
+                    return@launch
+                }
+
+                // Step 2: Deduct points from balance (ATOMIC OPERATION START)
                 val updatedAccount = currentAccount.copy(
                     balance = currentAccount.balance - pointsToExchange
                 )
@@ -289,20 +282,68 @@ class ExchangePointViewModel @Inject constructor(
                     return@launch
                 }
 
+                balanceUpdated = true
                 Log.d(TAG, "Point balance updated: ${updatedAccount.balance}")
 
-                // Step 4: Create point posting record (negative delta for withdrawal)
+                // Step 3: Create point posting record (negative delta for withdrawal)
                 val postingResult = createPointPostingUseCase(
                     delta = -pointsToExchange,
                     refType = PointPostingRefType.WITHDRAWAL
                 )
 
-                if (postingResult is Resource.Error) {
+                if (postingResult is Resource.Success) {
+                    postingCreated = true
+                    Log.d(TAG, "Point posting created successfully")
+                } else {
                     Log.e(TAG, "Failed to create point posting: ${postingResult.message}")
-                    // Don't fail the whole operation if posting fails
+                    // Continue - posting is for audit trail, not critical for user experience
                 }
 
-                // Success!
+                // Step 4: Create exchange transaction (FINAL STEP)
+                val transaction = ExchangeTransaction(
+                    userId = userId,
+                    methodType = selectedMethod.type,
+                    accountNumber = currentState.accountNumber.trim(),
+                    accountName = currentState.accountName.trim(),
+                    pointsExchanged = pointsToExchange,
+                    amountReceived = amountReceived,
+                    adminFee = selectedMethod.adminFee
+                )
+
+                val exchangeResult = initiateExchangeUseCase(transaction)
+                if (exchangeResult is Resource.Error) {
+                    Log.e(TAG, "Failed to create exchange transaction: ${exchangeResult.message}")
+
+                    // ROLLBACK: Restore original balance
+                    if (balanceUpdated && originalAccount != null) {
+                        Log.d(TAG, "Rolling back point balance update")
+                        val rollbackResult = updatePointAccountUseCase(originalAccount)
+                        if (rollbackResult is Resource.Error) {
+                            Log.e(TAG, "CRITICAL: Failed to rollback balance: ${rollbackResult.message}")
+                            _state.update {
+                                it.copy(
+                                    isProcessing = false,
+                                    error = "Terjadi kesalahan serius. Silakan hubungi customer service."
+                                )
+                            }
+                            return@launch
+                        }
+                        Log.d(TAG, "Balance rollback successful")
+                    }
+
+                    _state.update {
+                        it.copy(
+                            isProcessing = false,
+                            error = exchangeResult.message ?: "Gagal menyimpan transaksi penukaran"
+                        )
+                    }
+                    return@launch
+                }
+
+                val transactionId = exchangeResult.data
+                Log.d(TAG, "Exchange transaction created: $transactionId")
+
+                // Success! All steps completed
                 _state.update {
                     it.copy(
                         isProcessing = false,
@@ -318,6 +359,18 @@ class ExchangePointViewModel @Inject constructor(
 
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to process exchange: ${e.message}", e)
+
+                // ROLLBACK on unexpected exception
+                if (balanceUpdated && originalAccount != null) {
+                    Log.d(TAG, "Exception occurred - rolling back point balance")
+                    try {
+                        updatePointAccountUseCase(originalAccount)
+                        Log.d(TAG, "Exception rollback successful")
+                    } catch (rollbackError: Exception) {
+                        Log.e(TAG, "CRITICAL: Failed to rollback on exception: ${rollbackError.message}")
+                    }
+                }
+
                 _state.update {
                     it.copy(
                         isProcessing = false,
