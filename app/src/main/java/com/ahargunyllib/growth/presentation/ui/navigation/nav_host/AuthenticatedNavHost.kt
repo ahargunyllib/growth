@@ -24,6 +24,7 @@ import com.ahargunyllib.growth.presentation.view.authenticated.ProfileScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.ScanQRScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.SuccessAchievementScreen
 import com.ahargunyllib.growth.presentation.view.authenticated.SuccessDepositScreen
+import com.ahargunyllib.growth.presentation.view.authenticated.SuccessExchangeScreen
 import com.ahargunyllib.growth.presentation.viewmodel.NavbarViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.ahargunyllib.growth.presentation.view.authenticated.HistoryDepositScreen
@@ -128,6 +129,23 @@ fun AuthenticatedNavHost(rootNavController: NavController) {
                             authenticatedNavController = authenticatedNavController,
                             points = points,
                             weight = weight
+                        )
+                    }
+                )
+
+                composable(
+                    route = AuthenticatedNavObj.SuccessExchange.route,
+                    arguments = listOf(
+                        navArgument("points") { type = NavType.IntType },
+                        navArgument("amount") { type = NavType.IntType }
+                    ),
+                    content = { backStackEntry ->
+                        val points = backStackEntry.arguments?.getInt("points") ?: 0
+                        val amount = backStackEntry.arguments?.getInt("amount") ?: 0
+                        SuccessExchangeScreen(
+                            authenticatedNavController = authenticatedNavController,
+                            points = points,
+                            amount = amount
                         )
                     }
                 )
