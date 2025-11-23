@@ -36,7 +36,7 @@ class ExchangeRepositoryImpl @Inject constructor(
                     iconResId = R.drawable.ic_dana,
                     minAmount = 100,
                     maxAmount = 10000,
-                    conversionRate = 100.0f,
+                    conversionRate = 100,
                     adminFee = 0,
                     isActive = true
                 ),
@@ -48,7 +48,7 @@ class ExchangeRepositoryImpl @Inject constructor(
                     iconResId = R.drawable.ic_bri,
                     minAmount = 100,
                     maxAmount = 10000,
-                    conversionRate = 100.0f,
+                    conversionRate = 100,
                     adminFee = 0,
                     isActive = true
                 ),
@@ -60,7 +60,7 @@ class ExchangeRepositoryImpl @Inject constructor(
                     iconResId = R.drawable.ic_mandiri,
                     minAmount = 100,
                     maxAmount = 10000,
-                    conversionRate = 100.0f,
+                    conversionRate = 100,
                     adminFee = 0,
                     isActive = true
                 ),
@@ -72,7 +72,7 @@ class ExchangeRepositoryImpl @Inject constructor(
                     iconResId = R.drawable.ic_bni,
                     minAmount = 100,
                     maxAmount = 10000,
-                    conversionRate = 100.0f,
+                    conversionRate = 100,
                     adminFee = 0,
                     isActive = true
                 ),
@@ -84,7 +84,7 @@ class ExchangeRepositoryImpl @Inject constructor(
                     iconResId = R.drawable.ic_bca,
                     minAmount = 100,
                     maxAmount = 10000,
-                    conversionRate = 100.0f,
+                    conversionRate = 100,
                     adminFee = 0,
                     isActive = true
                 )

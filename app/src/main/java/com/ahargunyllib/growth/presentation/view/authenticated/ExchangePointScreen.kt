@@ -493,12 +493,17 @@ fun ExchangePointScreen(
 
     // Confirmation dialog
     if (state.showConfirmationDialog) {
+        val pointsToExchange = state.pointsToExchange.toIntOrNull() ?: 0
+        val conversionRate = state.selectedMethod?.conversionRate ?: 100
+        val adminFee = state.selectedMethod?.adminFee ?: 0
+        val amountReceived = (pointsToExchange * conversionRate) - adminFee
+
         ExchangeConfirmationDialog(
             method = state.selectedMethod,
-            pointsToExchange = state.pointsToExchange.toIntOrNull() ?: 0,
+            pointsToExchange = pointsToExchange,
             accountNumber = state.accountNumber,
             accountName = state.accountName,
-            amountReceived = (state.pointsToExchange.toIntOrNull() ?: 0) - (state.selectedMethod?.adminFee ?: 0),
+            amountReceived = amountReceived,
             onConfirm = { viewModel.processExchange() },
             onDismiss = { viewModel.hideConfirmationDialog() }
         )

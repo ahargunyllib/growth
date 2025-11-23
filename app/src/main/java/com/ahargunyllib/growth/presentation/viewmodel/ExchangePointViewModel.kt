@@ -230,8 +230,8 @@ class ExchangePointViewModel @Inject constructor(
                     )
                 }
 
-                // Calculate amount received
-                val amountReceived = (pointsToExchange * selectedMethod.conversionRate).toInt() - selectedMethod.adminFee
+                // Calculate amount received using integer arithmetic
+                val amountReceived = (pointsToExchange * selectedMethod.conversionRate) - selectedMethod.adminFee
 
                 // Step 1: Create exchange transaction
                 val transaction = ExchangeTransaction(

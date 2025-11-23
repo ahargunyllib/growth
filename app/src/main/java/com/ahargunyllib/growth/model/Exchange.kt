@@ -20,7 +20,7 @@ data class ExchangeMethod(
     val iconResId: Int = 0,
     val minAmount: Int = 100, // Minimum points to exchange
     val maxAmount: Int = 10000, // Maximum points per transaction
-    val conversionRate: Float = 100.0f, // Points to IDR ratio (100 points = 10,000 IDR = 1 point = 100 IDR)
+    val conversionRate: Int = 100, // Points to IDR ratio (1 point = 100 IDR)
     val adminFee: Int = 0, // Admin fee in points
     val isActive: Boolean = true
 )
