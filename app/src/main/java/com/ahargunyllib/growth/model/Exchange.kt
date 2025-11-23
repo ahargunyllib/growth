@@ -21,7 +21,7 @@ data class ExchangeMethod(
     val minAmount: Int = 100, // Minimum points to exchange
     val maxAmount: Int = 10000, // Maximum points per transaction
     val conversionRate: Int = 100, // Points to IDR ratio (1 point = 100 IDR)
-    val adminFee: Int = 0, // Admin fee in points
+    val adminFee: Int = 0, // Admin fee deducted from points BEFORE conversion (unit: points)
     val isActive: Boolean = true
 )
 
@@ -41,9 +41,9 @@ data class ExchangeTransaction(
     val methodType: ExchangeMethodType = ExchangeMethodType.DANA,
     val accountNumber: String = "", // User's account number for the selected method
     val accountName: String = "", // User's account name
-    val pointsExchanged: Int = 0, // Total points deducted
-    val amountReceived: Int = 0, // Amount in IDR received by user
-    val adminFee: Int = 0,
+    val pointsExchanged: Int = 0, // Total points user requested to exchange (before fee)
+    val amountReceived: Int = 0, // Amount in IDR received by user (after fee & conversion)
+    val adminFee: Int = 0, // Admin fee in points (deducted before conversion)
     val status: ExchangeStatus = ExchangeStatus.PENDING,
     val createdAt: String = "",
     val processedAt: String = "",

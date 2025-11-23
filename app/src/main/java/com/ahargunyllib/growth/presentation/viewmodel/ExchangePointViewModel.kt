@@ -237,7 +237,9 @@ class ExchangePointViewModel @Inject constructor(
                 }
 
                 // Calculate amount received using integer arithmetic
-                val amountReceived = (pointsToExchange * selectedMethod.conversionRate) - selectedMethod.adminFee
+                // Apply admin fee in points first, then convert to IDR
+                val pointsAfterFee = pointsToExchange - selectedMethod.adminFee
+                val amountReceived = pointsAfterFee * selectedMethod.conversionRate
 
                 // Step 1: Get current point account and validate
                 val pointAccountResult = getMyPointAccountUseCase()

@@ -496,7 +496,9 @@ fun ExchangePointScreen(
         val pointsToExchange = state.pointsToExchange.toIntOrNull() ?: 0
         val conversionRate = state.selectedMethod?.conversionRate ?: 100
         val adminFee = state.selectedMethod?.adminFee ?: 0
-        val amountReceived = (pointsToExchange * conversionRate) - adminFee
+        // Apply admin fee in points first, then convert to IDR
+        val pointsAfterFee = pointsToExchange - adminFee
+        val amountReceived = pointsAfterFee * conversionRate
 
         ExchangeConfirmationDialog(
             method = state.selectedMethod,
@@ -577,6 +579,8 @@ private fun ExchangeConfirmationDialog(
     onDismiss: () -> Unit
 ) {
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+    val adminFee = method?.adminFee ?: 0
+    val pointsAfterFee = pointsToExchange - adminFee
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -596,13 +600,24 @@ private fun ExchangeConfirmationDialog(
 
                 InfoRow("Metode", method?.name ?: "-")
                 InfoRow("Poin Ditukar", "$pointsToExchange poin")
+
+                // Show admin fee if applicable
+                if (adminFee > 0) {
+                    InfoRow("Biaya Admin", "$adminFee poin")
+                    InfoRow("Poin Efektif", "$pointsAfterFee poin")
+                }
+
                 InfoRow("Nomor Rekening", accountNumber)
                 InfoRow("Nama Pemilik", accountName)
                 InfoRow("Jumlah Diterima", currencyFormat.format(amountReceived))
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Proses penukaran akan diproses dalam 1-3 hari kerja",
+                    text = if (adminFee > 0) {
+                        "Biaya admin $adminFee poin akan dipotong sebelum konversi. Proses penukaran 1-3 hari kerja."
+                    } else {
+                        "Proses penukaran akan diproses dalam 1-3 hari kerja"
+                    },
                     style = GrowthTypography.BodyL.textStyle,
                     color = GrowthScheme.Secondary.color
                 )
