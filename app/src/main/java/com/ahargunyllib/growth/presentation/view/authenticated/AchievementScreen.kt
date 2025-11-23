@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fitInside
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,9 +20,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Recycling
+import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -31,40 +29,36 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.ahargunyllib.growth.R
-import com.ahargunyllib.growth.presentation.ui.design_system.Theme
-import com.ahargunyllib.growth.model.Mission // <<--- IMPORT YOUR EXISTING MISSION MODEL
+import com.ahargunyllib.growth.model.MissionWithProgress
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
-import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj.AchievementScreen.route
+import com.ahargunyllib.growth.presentation.viewmodel.AchievementViewModel
+import com.ahargunyllib.growth.presentation.viewmodel.HomeViewModel
 
 @Composable
 fun AchievementScreen(
     authenticatedNavController: NavController,
-    rootNavController: NavController
+    rootNavController: NavController,
+    viewModel: AchievementViewModel = hiltViewModel()
 ) {
-    val missions: List<Mission> = listOf(
-        Mission(id = "1", icon = Icons.Default.Recycling, category = "Setor Sampah", description = "Setor sampah hingga 1Kg", points = 150, progress = 1.0f),
-        Mission(id = "2", icon = Icons.Default.Recycling, category = "Setor Sampah", description = "Setor sampah hingga 10Kg", points = 400, progress = 0.4f),
-        Mission(id = "3", icon = Icons.Default.Newspaper, category = "Artikel", description = "Membaca 3 artikel", points = 50, progress = 0.3f),
-        Mission(id = "4", icon = Icons.Default.CalendarMonth, category = "Event", description = "Ikut 1 event dan selesaikan", points = 100, progress = 1.0f),
-        Mission(id = "5", icon = Icons.Default.CalendarMonth, category = "Event", description = "Ikut 5 event dan selesaikan", points = 600, progress = 0.2f)
-    )
+    val state by viewModel.state.collectAsState()
 
     Column(
         modifier = Modifier
@@ -76,7 +70,7 @@ fun AchievementScreen(
         AchievementHeader()
         Spacer(modifier = Modifier.height(24.dp))
         AchievementList(
-            missions = missions,
+            missions = state.missions,
             onItemClick = { missionId ->
                 val route = AuthenticatedNavObj.ClaimAchievement.createRoute(missionId)
                 authenticatedNavController.navigate(route)
@@ -136,20 +130,16 @@ fun AchievementHeader() {
 
 @Composable
 fun AchievementList(
-    missions: List<Mission>,
+    missions: List<MissionWithProgress>,
     onItemClick: (String) -> Unit
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(missions) { mission ->
+        items(missions) { missionWithProgress ->
             AchievementItem(
-                icon = mission.icon,
-                category = mission.category,
-                description = mission.description,
-                points = mission.points,
-                progress = mission.progress,
-                onClick = { onItemClick(mission.id) } // Teruskan id misi saat diklik
+                missionWithProgress = missionWithProgress,
+                onClick = { onItemClick(missionWithProgress.mission.id) }
             )
         }
     }
@@ -157,20 +147,16 @@ fun AchievementList(
 
 @Composable
 fun AchievementItem(
-    icon: ImageVector,
-    category: String,
-    description: String,
-    points: Int,
-    progress: Float,
+    missionWithProgress: MissionWithProgress,
     onClick: () -> Unit
 ) {
-    val isCompleted = progress >= 1.0f
+    val isCompleted = missionWithProgress.isCompleted
     val borderColor = if (isCompleted) GrowthScheme.Fourth.color else GrowthScheme.Disabled.color
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable(enabled = isCompleted, onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // Card background
         border = BorderStroke(2.dp, borderColor)
@@ -189,19 +175,19 @@ fun AchievementItem(
                     verticalAlignment = Alignment.CenterVertically
                 ){
                     Icon(
-                        imageVector = icon,
-                        contentDescription = category,
+                        imageVector = Icons.Default.TrackChanges,
+                        contentDescription = missionWithProgress.mission.category,
                         modifier = Modifier.size(24.dp),
                         tint = GrowthScheme.Primary.color // Icon tint
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Column() {
+                    Column {
                         Text(
-                            text = category,
+                            text = missionWithProgress.mission.category,
                             style = GrowthTypography.LabelL.textStyle,
                         )
                         Text(
-                            text = description,
+                            text = missionWithProgress.mission.description,
                             style = GrowthTypography.BodyM.textStyle
                         )
                     }
@@ -228,7 +214,7 @@ fun AchievementItem(
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = points.toString(),
+                        text = missionWithProgress.mission.pointReward.toString(),
                         color = GrowthScheme.Secondary.color,
                         style = GrowthTypography.LabelL.textStyle.copy(fontSize = 12.sp)
                     )
@@ -239,7 +225,7 @@ fun AchievementItem(
             Row(modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
                 LinearProgressIndicator(
-                    progress = { progress },
+                    progress = missionWithProgress.progressPercentage,
                     modifier = Modifier
                         .weight(1f)
                         .height(8.dp)
@@ -250,7 +236,7 @@ fun AchievementItem(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "${(progress * 100).toInt()}%",
+                    text = "${missionWithProgress.progress?.progressValue ?: 0}/${missionWithProgress.mission.targetValue}",
                     style = GrowthTypography.BodyS.textStyle
                 )
             }

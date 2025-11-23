@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.ahargunyllib.growth.R
+import com.ahargunyllib.growth.model.MissionWithProgress
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthScheme
 import com.ahargunyllib.growth.presentation.ui.design_system.GrowthTypography
 import com.ahargunyllib.growth.presentation.ui.navigation.nav_obj.AuthenticatedNavObj
@@ -237,8 +238,30 @@ fun HomeScreen(
                 style = GrowthTypography.LabelL.textStyle
             )
             Spacer(modifier = Modifier.height(6.dp))
-            MissionItem(target = "1 Kg", desc = "Setor sampah harianmu!", points = "150")
-            MissionItem(target = "10 Kg", desc = "Setor sampah harianmu!", points = "500")
+
+            if (homeState.isMissionsLoading) {
+                Text(
+                    text = "Memuat misi...",
+                    color = GrowthScheme.Black2.color,
+                    style = GrowthTypography.BodyM.textStyle
+                )
+            } else if (homeState.missions.isEmpty()) {
+                Text(
+                    text = "Tidak ada misi tersedia",
+                    color = GrowthScheme.Black2.color,
+                    style = GrowthTypography.BodyM.textStyle
+                )
+            } else {
+                homeState.missions.take(5).forEach { missionWithProgress ->
+                    MissionItem(
+                        missionWithProgress = missionWithProgress,
+                        onClick = {
+                            val route = AuthenticatedNavObj.ClaimAchievement.createRoute(missionWithProgress.mission.id)
+                            authenticatedNavController.navigate(route)
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -293,14 +316,21 @@ fun MenuBox(icon: ImageVector, title: String, onClick: () -> Unit = {})  {
 }
 
 @Composable
-fun MissionItem(target: String, desc: String, points: String) {
+fun MissionItem(
+    missionWithProgress: MissionWithProgress,
+    onClick: () -> Unit
+) {
+    val mission = missionWithProgress.mission
+    val isCompleted = missionWithProgress.isCompleted
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 6.dp),
+            .padding(bottom = 6.dp)
+            .clickable(enabled = isCompleted, onClick = onClick),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = GrowthScheme.White.color),
-        elevation = CardDefaults.cardElevation(1.dp)
+        elevation = CardDefaults.cardElevation(1.dp),
     ) {
         Row(
             modifier = Modifier.padding(8.dp),
@@ -315,12 +345,12 @@ fun MissionItem(target: String, desc: String, points: String) {
             Spacer(modifier = Modifier.width(6.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = target,
+                    text = mission.category,
                     color = GrowthScheme.Black.color,
                     style = GrowthTypography.LabelL.textStyle.copy(fontSize = 13.sp)
                 )
                 Text(
-                    text = desc,
+                    text = mission.description,
                     color = GrowthScheme.Black2.color,
                     style = GrowthTypography.BodyM.textStyle.copy(fontSize = 10.sp)
                 )
@@ -346,7 +376,7 @@ fun MissionItem(target: String, desc: String, points: String) {
                 }
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = points,
+                    text = "${mission.pointReward}",
                     color = GrowthScheme.Black2.color,
                     style = GrowthTypography.BodyM.textStyle.copy(fontSize = 12.sp)
                 )
