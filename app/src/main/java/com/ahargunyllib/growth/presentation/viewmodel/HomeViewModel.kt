@@ -3,9 +3,12 @@ package com.ahargunyllib.growth.presentation.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ahargunyllib.growth.model.MissionWithProgress
 import com.ahargunyllib.growth.model.PointAccount
 import com.ahargunyllib.growth.model.User
 import com.ahargunyllib.growth.usecase.auth.GetCurrentSessionUseCase
+import com.ahargunyllib.growth.usecase.mission.ClaimMissionRewardUseCase
+import com.ahargunyllib.growth.usecase.mission.GetAllMyMissionsUseCase
 import com.ahargunyllib.growth.usecase.point.GetMyPointAccountUseCase
 import com.ahargunyllib.growth.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,13 +22,16 @@ data class HomeState(
     val isLoading: Boolean = false,
     val user: User? = null,
     val pointAccount: PointAccount? = null,
+    val missions: List<MissionWithProgress> = emptyList(),
+    val isMissionsLoading: Boolean = false,
     val error: String? = null
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getCurrentSessionUseCase: GetCurrentSessionUseCase,
-    private val getMyPointAccountUseCase: GetMyPointAccountUseCase
+    private val getMyPointAccountUseCase: GetMyPointAccountUseCase,
+    private val getAllMyMissionsUseCase: GetAllMyMissionsUseCase,
 ) : ViewModel() {
 
     companion object {
@@ -38,6 +44,7 @@ class HomeViewModel @Inject constructor(
     init {
         loadUserData()
         loadPointAccount()
+        loadMissions()
     }
 
     private fun loadUserData() {
@@ -89,8 +96,42 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun loadMissions() {
+        viewModelScope.launch {
+            _homeState.update { it.copy(isMissionsLoading = true) }
+
+            when (val result = getAllMyMissionsUseCase()) {
+                is Resource.Success -> {
+                    _homeState.update {
+                        it.copy(
+                            missions = result.data ?: emptyList(),
+                            isMissionsLoading = false
+                        )
+                    }
+                    Log.d(TAG, "Missions loaded: ${result.data?.size}")
+                }
+                is Resource.Error -> {
+                    _homeState.update {
+                        it.copy(
+                            error = result.message,
+                            isMissionsLoading = false
+                        )
+                    }
+                    Log.e(TAG, "Failed to load missions: ${result.message}")
+                }
+                is Resource.Loading -> {
+                    // Already loading
+                }
+            }
+        }
+    }
+    fun clearError() {
+        _homeState.update { it.copy(error = null) }
+    }
+
     fun refreshData() {
         loadUserData()
         loadPointAccount()
+        loadMissions()
     }
 }

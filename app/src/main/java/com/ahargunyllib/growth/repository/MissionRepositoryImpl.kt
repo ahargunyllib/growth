@@ -5,6 +5,7 @@ import com.ahargunyllib.growth.contract.MissionRepository
 import com.ahargunyllib.growth.model.Mission
 import com.ahargunyllib.growth.model.MissionCompletion
 import com.ahargunyllib.growth.model.MissionProgress
+import com.ahargunyllib.growth.model.MissionWithProgress
 import com.ahargunyllib.growth.utils.Resource
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -23,12 +24,11 @@ class MissionRepositoryImpl @Inject constructor(
                 ?: return Resource.Error("User not authenticated")
 
             val snapshot = firebaseFirestore.collection("missions")
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .await()
 
             val missions = snapshot.documents.mapNotNull { doc ->
-                doc.toObject(Mission::class.java)
+                doc.toObject(Mission::class.java)?.copy(id = doc.id)
             }
 
             Log.d("MissionRepository", "getAllMyMission: ${missions.size} missions")
@@ -39,6 +39,139 @@ class MissionRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAllMyMissionsWithProgress(): Resource<List<MissionWithProgress>> {
+        try {
+            val userId = firebaseAuth.currentUser?.uid
+                ?: return Resource.Error("User not authenticated")
+
+            // Fetch all missions
+            val missionsSnapshot = firebaseFirestore.collection("missions")
+                .get()
+                .await()
+
+            val missions = missionsSnapshot.documents.mapNotNull { doc ->
+                doc.toObject(Mission::class.java)?.copy(id = doc.id)
+            }
+
+            // Fetch all progress for this user
+            val progressSnapshot = firebaseFirestore.collection("mission_progress")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+
+            val progressMap = progressSnapshot.documents.mapNotNull { doc ->
+                doc.toObject(MissionProgress::class.java)?.copy(id = doc.id)
+            }.associateBy { it.missionId }
+
+            // Fetch all completions for this user
+            val completionsSnapshot = firebaseFirestore.collection("mission_completions")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+
+            val completionsMap = completionsSnapshot.documents.mapNotNull { doc ->
+                doc.toObject(MissionCompletion::class.java)?.copy(id = doc.id)
+            }.associateBy { it.missionId }
+
+            // Combine data
+            val missionsWithProgress = missions.map { mission ->
+                MissionWithProgress(
+                    mission = mission,
+                    progress = progressMap[mission.id],
+                    completion = completionsMap[mission.id]
+                )
+            }
+
+            Log.d("MissionRepository", "getAllMyMissionsWithProgress: ${missionsWithProgress.size} missions")
+            return Resource.Success(missionsWithProgress)
+        } catch (e: Exception) {
+            Log.e("MissionRepository", "getAllMyMissionsWithProgress: ${e.message}")
+            return Resource.Error(e.message ?: "Failed to fetch missions with progress")
+        }
+    }
+
+    override suspend fun getMissionWithProgress(missionId: String): Resource<MissionWithProgress?> {
+        try {
+            val userId = firebaseAuth.currentUser?.uid
+                ?: return Resource.Error("User not authenticated")
+
+            // Validate missionId
+            if (missionId.isEmpty()) {
+                return Resource.Error("Mission ID is empty")
+            }
+
+            // Fetch the specific mission
+            val missionSnapshot = firebaseFirestore.collection("missions")
+                .document(missionId)
+                .get()
+                .await()
+
+            val mission = missionSnapshot.toObject(Mission::class.java)?.copy(id = missionSnapshot.id)
+                ?: return Resource.Error("Mission not found")
+
+            // Fetch progress for this user and mission
+            val progressSnapshot = firebaseFirestore.collection("mission_progress")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("missionId", missionId)
+                .limit(1)
+                .get()
+                .await()
+
+            val progress = progressSnapshot.documents.firstOrNull()?.let { doc ->
+                doc.toObject(MissionProgress::class.java)?.copy(id = doc.id)
+            }
+
+            // Fetch completion for this user and mission
+            val completionSnapshot = firebaseFirestore.collection("mission_completions")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("missionId", missionId)
+                .limit(1)
+                .get()
+                .await()
+
+            val completion = completionSnapshot.documents.firstOrNull()?.let { doc ->
+                doc.toObject(MissionCompletion::class.java)?.copy(id = doc.id)
+            }
+
+            // Combine data
+            val missionWithProgress = MissionWithProgress(
+                mission = mission,
+                progress = progress,
+                completion = completion
+            )
+
+            Log.d("MissionRepository", "getMissionWithProgress: $missionWithProgress")
+            return Resource.Success(missionWithProgress)
+        } catch (e: Exception) {
+            Log.e("MissionRepository", "getMissionWithProgress: ${e.message}")
+            return Resource.Error(e.message ?: "Failed to fetch mission with progress")
+        }
+    }
+
+    override suspend fun getMissionProgress(missionId: String): Resource<MissionProgress?> {
+        try {
+            val userId = firebaseAuth.currentUser?.uid
+                ?: return Resource.Error("User not authenticated")
+
+            val snapshot = firebaseFirestore.collection("mission_progress")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("missionId", missionId)
+                .limit(1)
+                .get()
+                .await()
+
+            val progress = snapshot.documents.firstOrNull()?.let { doc ->
+                doc.toObject(MissionProgress::class.java)?.copy(id = doc.id)
+            }
+
+            Log.d("MissionRepository", "getMissionProgress: $progress")
+            return Resource.Success(progress)
+        } catch (e: Exception) {
+            Log.e("MissionRepository", "getMissionProgress: ${e.message}")
+            return Resource.Error(e.message ?: "Failed to fetch mission progress")
+        }
+    }
+
     override suspend fun createMissionProgress(missionProgress: MissionProgress): Resource<Boolean> {
         try {
             val userId = firebaseAuth.currentUser?.uid
@@ -46,7 +179,6 @@ class MissionRepositoryImpl @Inject constructor(
 
             val progressWithUser = missionProgress.copy(
                 userId = userId,
-                createdAt = System.currentTimeMillis().toString()
             )
 
             val docRef = firebaseFirestore.collection("mission_progress").document()
@@ -78,6 +210,30 @@ class MissionRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e("MissionRepository", "updateMissionProgress: ${e.message}")
             return Resource.Error(e.message ?: "Failed to update mission progress")
+        }
+    }
+
+    override suspend fun getMissionCompletion(missionId: String): Resource<MissionCompletion?> {
+        try {
+            val userId = firebaseAuth.currentUser?.uid
+                ?: return Resource.Error("User not authenticated")
+
+            val snapshot = firebaseFirestore.collection("mission_completions")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("missionId", missionId)
+                .limit(1)
+                .get()
+                .await()
+
+            val completion = snapshot.documents.firstOrNull()?.let { doc ->
+                doc.toObject(MissionCompletion::class.java)?.copy(id = doc.id)
+            }
+
+            Log.d("MissionRepository", "getMissionCompletion: $completion")
+            return Resource.Success(completion)
+        } catch (e: Exception) {
+            Log.e("MissionRepository", "getMissionCompletion: ${e.message}")
+            return Resource.Error(e.message ?: "Failed to fetch mission completion")
         }
     }
 

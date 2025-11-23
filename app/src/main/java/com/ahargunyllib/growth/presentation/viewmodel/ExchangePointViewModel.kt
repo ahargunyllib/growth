@@ -309,18 +309,48 @@ class ExchangePointViewModel @Inject constructor(
                 balanceUpdated = true
                 Log.d(TAG, "Point balance updated: ${updatedAccount.balance}")
 
-                // Step 3: Create point posting record (negative delta for withdrawal)
+                // Step 3: Create point posting record (CRITICAL - required for audit trail)
                 val postingResult = createPointPostingUseCase(
                     delta = -pointsToExchange,
                     refType = PointPostingRefType.WITHDRAWAL
                 )
 
-                if (postingResult is Resource.Success) {
-                    postingCreated = true
-                    Log.d(TAG, "Point posting created successfully")
-                } else {
-                    Log.e(TAG, "Failed to create point posting: ${postingResult.message}")
-                    // Continue - posting is for audit trail, not critical for user experience
+                when (postingResult) {
+                    is Resource.Success -> {
+                        postingCreated = true
+                        Log.d(TAG, "Point posting created successfully")
+                    }
+                    is Resource.Error -> {
+                        Log.e(TAG, "Failed to create point posting: ${postingResult.message}")
+
+                        // ROLLBACK: Restore original balance
+                        if (balanceUpdated && originalAccount != null) {
+                            Log.d(TAG, "Rolling back point balance due to posting failure")
+                            val rollbackResult = updatePointAccountUseCase(originalAccount)
+                            if (rollbackResult is Resource.Error) {
+                                Log.e(TAG, "CRITICAL: Failed to rollback balance: ${rollbackResult.message}")
+                                _state.update {
+                                    it.copy(
+                                        isProcessing = false,
+                                        error = "Terjadi kesalahan serius. Silakan hubungi customer service."
+                                    )
+                                }
+                                return@launch
+                            }
+                            Log.d(TAG, "Balance rollback successful")
+                        }
+
+                        _state.update {
+                            it.copy(
+                                isProcessing = false,
+                                error = postingResult.message ?: "Gagal mencatat transaksi poin"
+                            )
+                        }
+                        return@launch
+                    }
+                    is Resource.Loading -> {
+                        Log.d(TAG, "Point posting creation in progress...")
+                    }
                 }
 
                 // Step 4: Create exchange transaction (FINAL STEP)
