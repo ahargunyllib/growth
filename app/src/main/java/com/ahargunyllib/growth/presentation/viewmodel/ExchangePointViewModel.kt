@@ -207,6 +207,15 @@ class ExchangePointViewModel @Inject constructor(
             }
         }
 
+        // Validate effective points after admin fee
+        val effectivePoints = pointsToExchange - selectedMethod.adminFee
+        if (effectivePoints <= 0) {
+            _state.update {
+                it.copy(error = "Jumlah setelah biaya admin harus lebih dari 0 poin")
+            }
+            return
+        }
+
         // Show confirmation dialog
         _state.update { it.copy(showConfirmationDialog = true, error = null) }
     }
